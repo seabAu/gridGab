@@ -1,0 +1,39 @@
+{
+    "name": "gridGab",
+    "version": "0.0.1",
+    "description": "A basic chat app using MERN and Socket.IO. Has account creation and management, live messaging, 1-on-1 chats, group chats, some personalization features, and notifications.",
+    "type": "module",
+    "main": "server.js",
+    "scripts": {
+        "server": "nodemon server/server.js",
+        "client": "npm start --prefix client",
+        "clientinstall": "npm install --prefix client",
+        "clientbuild": "npm build --prefix client",
+        "start": "concurrently \"npm run server\" \"npm run client\"",
+        "build": "npm install && npm run clientinstall && npm run clientbuild"
+    },
+    "author": "",
+    "license": "ISC",
+    "keywords": [
+        "MERN",
+        "React",
+        "Express",
+        "Node",
+        "Chat-app", 
+        "Chakra-UI"
+    ],
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "concurrently": "^8.2.2",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "express-async-handler": "^1.2.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.5.1",
+        "mongoose-autopopulate": "^1.1.0",
+        "mongoose-populate": "^3.0.3",
+        "nodemon": "^3.1.4",
+        "socket.io": "^4.7.5"
+    }
+}
