@@ -25,44 +25,62 @@ import {
     DrawerFooter,
     DrawerCloseButton,
     Badge,
+    Image,
+    FormControl,
+    MenuGroup,
 } from '@chakra-ui/react';
 
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'preact/hooks'
-import { AiOutlineSearch } from "react-icons/ai";
-import { BellIcon, ChevronDownIcon, MoonIcon, SettingsIcon, SunIcon } from "@chakra-ui/icons";
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { ChatState } from '../../context/ChatProvider';
-import ProfileModal from './ProfileModal';
-import UserListItem from '../Chat/UserListItem';
+
+import {
+    AiFillPicture,
+    AiOutlineAccountBook,
+    AiOutlineBell, 
+    AiOutlineLogout, 
+    AiOutlineSearch, 
+    AiOutlineSetting, 
+    AiOutlineSmile
+} from "react-icons/ai";
+
+import ProfileModal from '../User/ProfileModal';
+import UserListItem from '../User/UserListItem';
 import ChatLoading from '../Chat/ChatLoading';
 import axios from 'axios';
 import { getSender } from '../../config/ChatLogic';
+import logoDark from "../../assets/images/LogoDark.png";
+import logoLight from "../../assets/images/LogoLight.png";
+import UpdateProfileModal from '../User/UpdateProfileModal';
 
-const SideDrawer = () => {
+
+const SideDrawer = ( props ) => {
+    const {
+        open,
+        setOpen,
+        width,
+        placement,
+        children,   // Child elements will be placed in the side drawer's body content area. 
+        debug,
+    } = props;
+
     const {
         user,
+        setUser,
+        selectedChat,
         setSelectedChat,
-        chats,
-        setChats,
-        notifications,
-        setNotifications,
+        openSearchDrawer,
+        setOpenSearchDrawer,
     } = ChatState();
+
     const { colorMode, toggleColorMode } = useColorMode();
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const initialFocus = useRef();
     const toast = useToast();
-    const navigate = useNavigate();
     const [ search, setSearch ] = useState( "" );
     const [ searchResult, setSearchResult ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
     const [ loadingChat, setLoadingChat ] = useState();
-
-    const logoutHandler = async () => {
-        // Logs user out; messages server, deletes localstorage. 
-        localStorage.removeItem( 'userInfo' );
-        console.log( "User has been logged out." );
-        // setUser( null );
-        navigate( '/' );
-    }
 
     const handleSearch = async () => {
         if ( !search ) {
@@ -110,10 +128,15 @@ const SideDrawer = () => {
             }
             setLoading( false );
         } catch ( error ) {
-
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( error );
             toast( {
-                title: "Error",
-                description: "Failed to load the search results",
+                title: "Error: Failed to load the search results: ",
+                description: msg,
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -195,258 +218,106 @@ const SideDrawer = () => {
         console.log( "searchResult = ", searchResult );
     }, [ searchResult ] );
 
+    useEffect(() => {
+        if ( openSearchDrawer ) {
+            // Open drawer
+            if ( !isOpen ) onOpen();
+        }
+        else {
+            // Close drawer
+            if ( isOpen ) onClose();
+        }
+        
+    }, [ openSearchDrawer ]);
+
+    useEffect(() => {
+        if ( isOpen && !openSearchDrawer ) {
+            // Drawer is open, but our state variable is mismatched.
+            onOpen();
+        }
+        else if ( !isOpen && openSearchDrawer ) {
+            // Drawer is closed, but our state variable is mismatched.
+            onClose();
+        }
+        
+    }, [ isOpen ]);
+
     return (
-        <>
-            <Box
-                bg={ useColorModeValue( 'white', 'gray.dark' ) }
-                display={ 'flex' }
-                flexDir={ 'row' }
-                justifyContent="space-between"
-                alignItems="center"
-                flexWrap={'nowrap'}
-                w="100%"
-                p="5px 10px 5px 10px"
-                borderWidth="1px"
-                borderColor={ useColorModeValue( 'gray.200', 'gray.800' ) }
+
+        <Drawer
+            initialFocusRef={ initialFocus }
+            placement={ "left" }
+            onClose={ onClose }
+            isOpen={ isOpen }
+        >
+            <DrawerOverlay />
+            <DrawerContent
+                bg={ useColorModeValue(
+                    'gray.light',
+                    'gray.dark'
+                ) }
             >
-                <Tooltip label="Search users to chat" hasArrow placement='bottom-end' >
-                    <Button
-                        variant="ghost"
-                        bg={ useColorModeValue( 'white', 'gray.dark' ) }
-                        _hover={ {
-                            backgroundColor: useColorModeValue( 'gray.100', 'gray.800' ),
-                            color: useColorModeValue( 'gray.800', 'gray.100' ),
-                            boxShadow: '0px 0px -2px -2px inset gray'
-                        } }>
-                        <AiOutlineSearch />
-                        <Text d={ { base: "none", md: "flex" } } px={ 4 } onClick={ onOpen }>
-                            Search User
-                        </Text>
-                    </Button>
-                </Tooltip>
-
-                <Box
-                    bg={ useColorModeValue( 'white', 'gray.dark' ) }
-                    display={ 'flex' }
-                    flexDir={ 'row' }
-                    paddingInline={ '4px' }
-                    gap={'8px'}
-                    alignItems="center"
-                    w={ 'auto' }
-                >
-                    <img src={ '../../assets/images/LogoDark.png' } ></img>
-
-                    <Text fontSize={ "2xl" } fontFamily={ "Work sans" } color={ useColorModeValue( 'gray.dark', 'white' ) } >
-                        gridGab
-                    </Text>
-                </Box>
-                <div>
-                    <Menu>
-                        <MenuButton
-                            flexWrap={'nowrap'}
-                            transition='all 0.2s'
-                            borderRadius='md'
-                            _hover={ { bg: 'gray.light' } }
-                            _expanded={ { bg: 'gray.dark' } }
-                            _focus={ { boxShadow: 'inset' } }
-                        >
-                            {
-                                notifications.length ? (
-                                    <Badge variant='solid' colorScheme='red'>
-                                        {
-                                            notifications.length
-                                        }
-                                    </Badge>
-                                )
-                                    :
-                                    (
-                                        <></>
-                                    )
+                <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
+                <DrawerBody>
+                    <FormControl
+                        // ref={ initialFocus }
+                        display="flex"
+                        pb={ 2 }
+                        flexDir={ 'row' }
+                        justifyContent={ 'space-between' }
+                        onKeyDown={ ( e ) => {
+                            if ( e.key === "Enter" && search ) {
+                                handleSearch();
                             }
-                            
-                            <BellIcon fontSize={ "2xl" } m={ 1 } />
+                        } }
+                    >
 
-                        </MenuButton>
+                        <Input
+                            ref={ initialFocus }
+                            id={ 'search' }
+                            placeholder={ "Search by name or email" }
+                            mr={ 2 }
+                            value={ search }
+                            onChange={ ( e ) => setSearch( e.target.value ) }
+                        />
+                        <Button onClick={ handleSearch }>Go</Button>
+                    </FormControl>
 
-                        <MenuList>
-                            {
-                                !notifications.length
-                                    ?
-
-                                    <MenuItem key={ "no-notifications" } >
-                                        <Text fontSize={ "sm" }
-                                            fontFamily={ "Work sans" }
-                                            color={ useColorModeValue( 'gray.dark', 'white' ) }
-                                            justifyContent={ 'flex-start' }
-                                            alignSelf={ 'center' }
-                                            padding={ '0' }
-                                            margin={ '0' }
-                                        >
-                                            { ( "No Notifications" ) }
-                                        </Text>
-                                    </MenuItem>
-                                    :
-                                    (
-                                        notifications.map( ( notify, index ) => {
-                                            return (
-                                                <MenuItem
-                                                    key={ notify._id }
-                                                    onClick={ () => {
-                                                        setSelectedChat( notify.chat );
-                                                        setNotifications(
-                                                            notifications.filter(
-                                                                ( n ) => n !== notify
-                                                            )
-                                                        );
-                                                    } }>
-                                                    <Text
-                                                        fontSize={ "sm" }
-                                                        fontFamily={ "Work sans" }
-                                                        color={ useColorModeValue( 'gray.dark', 'white' ) }
-                                                        justifyContent={ 'flex-start' }
-                                                        alignSelf={ 'center' }
-                                                        padding={ '0' }
-                                                        margin={ '0' }
-                                                    >
-                                                        { notify.chat.isGroupChat
-                                                            ?
-                                                            `New message in ${ notify.chat.chatName }`
-                                                            :
-                                                            `New message from ${ getSender( user, notify.chat.users ) }`
-                                                        }
-                                                    </Text>
-                                                </MenuItem>
-                                            )
-                                        } )
-                                    ) }
-                        </MenuList>
-                    </Menu>
-
-                    <Menu>
-                        <MenuButton
-                            bg={ useColorModeValue( 'white', 'gray.dark' ) }
-                            as={ Button }
-                            rightIcon={ <ChevronDownIcon /> }
-                            aria-label='Options'
-                            variant='outline'
-                            px={ 4 }
-                            py={ 2 }
-                            transition='all 0.2s'
-                            borderRadius='md'
-                            borderWidth='1px'
-                            _hover={ { bg: 'gray.light' } }
-                            _expanded={ { bg: 'gray.dark' } }
-                            _focus={ { boxShadow: 'inset' } }
-                        >
-                            <Avatar size='sm' cursor='pointer' name={ user.name } src={ user.avatar } />
-                        </MenuButton>
-
-                        <MenuList bg={ useColorModeValue( 'white', 'gray.dark' ) } >
-                            <ProfileModal user={ user }>
-                                <MenuItem
-                                    bg={
-                                        useColorModeValue( 'white', 'gray.dark' )
-                                    }
-                                    _hover={ {
-                                        backgroundColor: 'gray.light',
-                                        color: 'gray.100'
-                                    } }>Profile</MenuItem>
-                            </ProfileModal>
-
-                            <MenuItem
-                                bg={
-                                    useColorModeValue( 'white', 'gray.dark' )
-                                }
-                                _hover={ {
-                                    backgroundColor: 'gray.light',
-                                    color: 'gray.100'
-                                } }>
-                                <Flex
-                                    flexDirection={ "row" }
-                                    flex={ 1 }
-                                    alignItems={ "center" }
-                                    justifyContent={ "flex-start" }
-                                    gap={ 4 }
-                                    w={ "full" } onClick={ toggleColorMode }>
-
-                                    { colorMode === 'light'
-                                        ? <MoonIcon />
-                                        : <SunIcon /> } { `${ colorMode === 'light' ? 'Dark' : 'Light' } Mode` }
-
-                                </Flex>
-                            </MenuItem>
-
-                            <MenuItem
-                                bg={
-                                    useColorModeValue( 'white', 'gray.dark' )
-                                }
-                                _hover={ {
-                                    backgroundColor: 'gray.light',
-                                    color: 'gray.100'
-                                } }>Friend List</MenuItem>
-                            <MenuItem
-                                bg={
-                                    useColorModeValue( 'white', 'gray.dark' )
-                                }
-                                _hover={ {
-                                    backgroundColor: 'gray.light',
-                                    color: 'gray.100'
-                                } }>Notifications</MenuItem>
-                            <MenuDivider />
-                            <MenuItem
-                                onClick={ logoutHandler }
-                                bg={
-                                    useColorModeValue( 'white', 'gray.dark' )
-                                }
-                                _hover={ {
-                                    backgroundColor: 'gray.light',
-                                    color: 'gray.100'
-                                } }>Log Out</MenuItem>
-                        </MenuList>
-                    </Menu>
-                </div>
-            </Box>
-
-
-            <Drawer placement="left" onClose={ onClose } isOpen={ isOpen }>
-                <DrawerOverlay onClick={ onClose } />
-                <DrawerContent>
-                    <DrawerCloseButton />
-                    <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
-                    <DrawerBody>
-                        <Box display="flex" pb={ 2 } flexDir={ 'row' } justifyContent={ 'space-between' }>
-                            <Input
-                                placeholder="Search by name or email"
-                                mr={ 2 }
-                                value={ search }
-                                onChange={ ( e ) => setSearch( e.target.value ) }
+                    Results
+                    { loading ? (
+                        <ChatLoading />
+                    ) : (
+                        searchResult?.map( ( u ) => (
+                            <UserListItem
+                                key={ u._id }
+                                userData={ u }
+                                handleFunction={ () => accessChat( u._id ) }
                             />
-                            <Button onClick={ handleSearch }>Go</Button>
-                        </Box>
-
-                        Results
-                        { loading ? (
-                            <ChatLoading />
-                        ) : (
-                            searchResult?.map( ( u ) => (
-                                <UserListItem
-                                    key={ u._id }
-                                    user={ u }
-                                    handleFunction={ () => accessChat( u._id ) }
-                                />
-                            ) )
-                        ) }
-                        { loadingChat && <Spinner ml="auto" d="flex" /> }
-                    </DrawerBody>
-                    <DrawerFooter>
-                        <Button variant='outline' mr={ 3 } onClick={ onClose }>
-                            Close
-                        </Button>
-                        <Button colorScheme='blue'>+</Button>
-                    </DrawerFooter>
-                </DrawerContent>
-            </Drawer>
-        </>
+                        ) )
+                    ) }
+                    { loadingChat && <Spinner ml="auto" d="flex" /> }
+                </DrawerBody>
+                <DrawerFooter>
+                    <Button
+                        variant='outline'
+                        size={ 'sm' }
+                        mr={ 3 }
+                        onClick={ () => {
+                            onClose();
+                            setOpenSearchDrawer( false );
+                        } }
+                    >
+                        Close
+                    </Button>
+                    <Button
+                        variant='outline'
+                        size={ 'sm' }
+                    >
+                        +
+                    </Button>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 

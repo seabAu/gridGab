@@ -6,6 +6,8 @@ import {
     InputGroup,
     InputRightElement,
     VStack,
+    useColorModeValue,
+    useColorMode,
     useToast,
 } from '@chakra-ui/react';
 import { useState } from 'preact/hooks';
@@ -16,24 +18,15 @@ import { useNavigate } from 'react-router-dom';
 const Signup = () => {
     const toast = useToast();
     const navigate = useNavigate();
+    const { colorMode, toggleColorMode } = useColorMode();
 
-    const [
-        showPassword,
-        setShowPassword,
-    ] = useState( false );
-    const [
-        showConfirmPassword,
-        setShowConfirmPassword,
-    ] = useState( false );
+    const [ showPassword, setShowPassword ] = useState( false );
+    const [ showConfirmPassword, setShowConfirmPassword ] = useState( false );
     const [ name, setName ] = useState( '' );
-    const [ email, setEmail ] =
-        useState( '' );
-    const [ password, setPassword ] =
-        useState( '' );
-    const [
-        confirmPassword,
-        setConfirmPassword,
-    ] = useState( '' );
+    const [ displayName, setDisplayName ] = useState( '' );
+    const [ email, setEmail ] = useState( '' );
+    const [ password, setPassword ] = useState( '' );
+    const [ confirmPassword, setConfirmPassword ] = useState( '' );
     const [ avatar, setAvatar ] = useState();
     const [ avatarLoading, setAvatarLoading ] = useState( false );
 
@@ -73,10 +66,13 @@ const Signup = () => {
                     "Content-type": "application/json",
                 },
             };
+            // if ( !displayName ) { displayName = ""; } // Make sure it's not null at very least. 
+            
             const response = await axios.post(
                 "/api/user/",
                 {
                     name,
+                    displayName,
                     email,
                     password,
                     avatar,
@@ -89,7 +85,7 @@ const Signup = () => {
             console.log( "Axios :: received: ", data );
 
             toast( {
-                title: response.data.message ? response.data.message :  "Registration Successful",
+                title: response.data.message ? response.data.message : "Registration Successful",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -158,14 +154,14 @@ const Signup = () => {
         }
     }
 
-    function sRandom(length) {
+    function sRandom ( length ) {
         let result = '';
         const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        
+
         // Loop to generate characters for the specified length
-        for (let i = 0; i < length; i++) {
-            const randomInd = Math.floor(Math.random() * characters.length);
-            result += characters.charAt(randomInd);
+        for ( let i = 0; i < length; i++ ) {
+            const randomInd = Math.floor( Math.random() * characters.length );
+            result += characters.charAt( randomInd );
         }
         return result;
     }
@@ -188,12 +184,25 @@ const Signup = () => {
             <FormControl
                 id={ 'name' }
                 isRequired>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Account Name</FormLabel>
                 <Input
                     placeholder='Enter your name'
-                    value={name}
+                    value={ name }
                     onChange={ ( e ) => {
                         setName( e.target.value );
+                    } }
+                />
+            </FormControl>
+
+            <FormControl
+                id={ 'display_name' }
+                isRequired>
+                <FormLabel>Display Name</FormLabel>
+                <Input
+                    placeholder='How your name will appear to others'
+                    value={ displayName }
+                    onChange={ ( e ) => {
+                        setDisplayName( e.target.value );
                     } }
                 />
             </FormControl>
@@ -204,7 +213,7 @@ const Signup = () => {
                 <FormLabel>Email</FormLabel>
                 <Input
                     placeholder='Enter your email'
-                    value={email}
+                    value={ email }
                     onChange={ ( e ) => {
                         setEmail( e.target.value );
                     } }
@@ -219,7 +228,7 @@ const Signup = () => {
                     <Input
                         type={ showPassword ? `text` : `password` }
                         placeholder='Enter a password'
-                        value={password}
+                        value={ password }
                         onChange={ ( e ) => {
                             setPassword(
                                 e.target.value
@@ -230,9 +239,9 @@ const Signup = () => {
                     <InputRightElement
                         width={ `4.5rem` }>
                         <Button
-                            bgColor={ showPassword ? `grey` : `white` }
-                            h='1.75rem'
-                            size='sm'
+                            bgColor={ showPassword ? `grey` : `grey` }
+                            h={ '100%' }
+                            size={ 'sm' }
                             onClick={ () => {
                                 setShowPassword(
                                     !showPassword
@@ -256,7 +265,7 @@ const Signup = () => {
                     <Input
                         type={ showConfirmPassword ? `text` : `password` }
                         placeholder='Confirm your password'
-                        value={confirmPassword}
+                        value={ confirmPassword }
                         onChange={ ( e ) => {
                             setConfirmPassword(
                                 e.target.value
@@ -267,9 +276,9 @@ const Signup = () => {
                     <InputRightElement
                         width={ `4.5rem` }>
                         <Button
-                            bgColor={ showConfirmPassword ? `grey` : `white` }
-                            h='1.75rem'
-                            size='sm'
+                            bgColor={ showConfirmPassword ? `grey` : `grey` }
+                            h={ '100%' }
+                            size={ 'sm' }
                             onClick={ () => {
                                 setShowConfirmPassword(
                                     !showConfirmPassword
@@ -304,7 +313,7 @@ const Signup = () => {
             >
                 Sign Up
             </Button>
-            
+
             <Button
                 variant="solid"
                 colorScheme="red"

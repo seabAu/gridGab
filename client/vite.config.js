@@ -11,7 +11,7 @@ export default defineConfig( {
         host: true, // needed for the Docker Container port mapping to work
         port: 5173,
         // To avoid CORS errors.
-        origin: 'http://127.0.0.1:8080',
+        origin: 'http://127.0.0.1:5173',
         proxy: {
             "/api": {
                 target: "http://localhost:5025",

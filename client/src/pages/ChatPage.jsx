@@ -12,13 +12,22 @@ import {
     Box,
     useColorMode,
     useColorModeValue,
+    useToast,
 } from '@chakra-ui/react';
 import ChatContainer from '../components/Chat/ChatContainer';
+import Content from '../components/Page/Content';
 
 const ChatPage = () => {
     const { colorMode, toggleColorMode } = useColorMode();
-    const { user, refresh, setRefresh } = ChatState();
-    // const [ refresh, setRefresh ] = useState( false );
+    const {
+        user,
+        setUser,
+        fetchUser,
+        setFetchUser,
+        refresh,
+        setRefresh
+    } = ChatState();
+    const toast = useToast();
 
     // const fetchChats = async () => {
     //     const {data} = await axios.get( '/api/chat' );
@@ -26,7 +35,60 @@ const ChatPage = () => {
     //     setChats( data );
     // }
 
-    useEffect( () => { }, [] );
+    const getProfile = async () => {
+        setFetchUser( false );
+        console.log( "getProfile :: ", user );
+        let response;
+        try {
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${ user.token }`,
+                },
+            };
+
+            response = await axios.get( `/api/user/${ user._id }`, config );
+            console.log( "getProfile :: response = ", response );
+
+            if ( response.data ) {
+                console.log( "getProfile :: response.data.data = ", response.data.data );
+
+                let data = response.data.data;
+                setUser( data );
+                toast( {
+                    title: "Success",
+                    description: response.data.message,
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                    position: "bottom-left",
+                } );
+            }
+        } catch ( error ) {
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( error );
+            toast( {
+                title: "An error occurred",
+                description: msg,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom",
+            } );
+        }
+    }
+
+    useEffect( () => {
+        if ( fetchUser ) {
+            // Re-fetch the user data. 
+            console.log( "ChatPage :: Getting the user profile." );
+            getProfile();
+            // setFetchUser( false );
+        }
+    }, [ fetchUser ] );
 
     console.log(
         'ChatPage :: user is = ',
@@ -34,13 +96,14 @@ const ChatPage = () => {
     );
 
     return (
+
         <div
             style={ { width: '100%' } }
             bg={ useColorModeValue(
                 'white',
                 'gray.dark'
             ) }>
-            { user && <SideDrawer /> }
+            { user && <Content /> }
 
             <Box
                 display='flex'
@@ -48,8 +111,8 @@ const ChatPage = () => {
                 w='100%'
                 h='91.5vh'
                 p='4px'>
-                {user && <ChatList refresh={refresh} />}
-                {user && <ChatContainer refresh={refresh} setRefresh={setRefresh} />}
+                { user && <ChatList refresh={ refresh } /> }
+                { user && <ChatContainer refresh={ refresh } setRefresh={ setRefresh } /> }
             </Box>
         </div>
     );

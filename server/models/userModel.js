@@ -4,25 +4,27 @@ import populate from "mongoose-autopopulate";
 import bcrypt from 'bcryptjs';
 
 const userModel = new mongoose.Schema( {
-    
+
+    // User's Username, used for refs and authentication. 
     name: {
         type: String,
         required: true,
-        // unique: true,
+        unique: true,
     },
 
+    // User's displayed name, clientside facing.
     display_name: {
         type: String,
         // required: true,
         default: '',
-        // unique: false,
+        unique: false,
     },
 
     password: {
         type: String,
         required: true,
     },
-    
+
     email: {
         type: String,
         required: true,
@@ -30,30 +32,58 @@ const userModel = new mongoose.Schema( {
     },
 
     avatar: {
+        // Avatar image, shown next to anywhere their name appears. 
         type: String,
-        // required: true,
         default: "https://i.pravatar.cc/150?img=50"
     },
+
+    banner: {
+        // Banner image on profile. Goes behind avatar. 
+        type: String,
+        default: ""
+    },
+
     // Permissions system, to be added later. 
     role: {
         type: String,
         required: true,
-        enum: ["deleted", "guest", "admin"],
+        enum: [ "deleted", "guest", "admin" ],
         default: "guest",
     },
+
+    friends: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "users"
+        }
+    ],
+
+    status: {
+        type: String,
+        default: '',
+    },
+
+    about: {
+        type: String,
+        default: '',
+    },
+
     /// REQUIRED BUT GENERATED
     token: {
         type: String,
     },
+
     /// OPTIONAL / SUPPLEMENTAL
     register_date: {
         type: Date,
         default: Date.now,
     },
+
     last_login: {
         type: Date,
         default: Date.now,
     }
+
     // Make this a settings object later. 
     // settings: {
     //     type: {

@@ -5,6 +5,7 @@ import Message from "../models/messageModel.js";
 import Chat from "../models/chatModel.js";
 import generateToken from "../config/generateToken.js";
 
+const debug = process.env.DEBUG || false; 
 
 const sendMessage = asyncHandler( async ( req, res ) => {
     // 
@@ -85,7 +86,42 @@ const getMessages = asyncHandler( async ( req, res ) => {
     }
 } );
 
+// Delete message.
+const deleteMessage = asyncHandler( async ( req, res ) => {
+    // 
+    let { messageId } = req.params;
+    console.log( "deleteMessage => req.params.id = ", messageId );
+    try {
+        const message = await Message.findById( messageId );
+
+        if ( !message ) {
+            return res
+                .status( 404 )
+                .json( { error: "Message not found" } );
+        }
+
+        if ( message.sender._id.toString() !== req.user._id.toString() ) {
+            // Not authorized to make a post for someone else.
+            return res
+                .status( 401 )
+                .json( { error: "Not authorized to delete a message sent by someone else." } );
+        }
+
+        await Message.findByIdAndDelete( messageId );
+        res
+            .status( 200 )
+            .json( { message: "Message deleted successfully." } );
+
+    } catch ( error ) {
+        res
+            .status( 500 )
+            .json( { error: error.message } )
+        console.log( "Error in deleteMessage: ", error.message );
+    }
+} );
+
 export {
     sendMessage,
     getMessages,
+    deleteMessage,
 };

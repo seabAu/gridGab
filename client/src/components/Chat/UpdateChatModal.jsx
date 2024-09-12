@@ -20,9 +20,15 @@ import {
     FormControl,
     Input,
     Spinner,
+    useColorModeValue,
+    useColorMode,
+    Checkbox,
+    InputGroup,
+    InputLeftAddon,
+    CheckboxGroup,
 } from '@chakra-ui/react';
-import UserBadgeItem from './UserBadgeItem';
-import UserListItem from './UserListItem';
+import UserBadgeItem from '../User/UserBadgeItem';
+import UserListItem from '../User/UserListItem';
 
 const UpdateChatModal = () => {
     const {
@@ -32,15 +38,17 @@ const UpdateChatModal = () => {
         fetchChats,
         setFetchChats
     } = ChatState();
+    const { colorMode, toggleColorMode } = useColorMode();
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [ search, setSearch ] = useState( "" );
     const [ searchResult, setSearchResult ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
-    const [ groupChatName, setGroupChatName ] = useState(selectedChat ? selectedChat.chatName : '');
+    const [ groupChatName, setGroupChatName ] = useState( selectedChat ? selectedChat.chatName : '' );
     const [ renameLoading, setRenameLoading ] = useState( false );
 
+    console.log( "selectedChat = ", selectedChat );
     const handleSearch = async ( query ) => {
         // Search for viable users to invite to a group chat.
         setSearch( query );
@@ -86,7 +94,7 @@ const UpdateChatModal = () => {
 
     const handleAddUser = async ( newUser ) => {
         // Check if user is already in group
-        if ( selectedChat.users.find((u) => u._id === newUser._id ) ) {
+        if ( selectedChat.users.find( ( u ) => u._id === newUser._id ) ) {
             toast( {
                 title: "User already in group!",
                 status: "warning",
@@ -119,7 +127,7 @@ const UpdateChatModal = () => {
                 },
             };
             response = await axios.put(
-                `/api/chat/group/add`,
+                `/api/chat/add`,
                 {
                     chatId: selectedChat._id,
                     userId: newUser._id
@@ -160,7 +168,7 @@ const UpdateChatModal = () => {
 
     const handleRemove = async ( delUser ) => {
         // Check if user is admin - only admin can add users
-        if (selectedChat.groupAdmin._id !== user._id && delUser._id !== user._id) {
+        if ( selectedChat.groupAdmin._id !== user._id && delUser._id !== user._id ) {
             toast( {
                 title: "Only admins can remove users!",
                 status: "warning",
@@ -181,7 +189,7 @@ const UpdateChatModal = () => {
                 },
             };
             response = await axios.put(
-                `/api/chat/group/remove`,
+                `/api/chat/remove`,
                 {
                     chatId: selectedChat._id,
                     userId: delUser._id
@@ -243,7 +251,7 @@ const UpdateChatModal = () => {
                 },
             };
             response = await axios.put(
-                `/api/chat/group/rename`,
+                `/api/chat/rename`,
                 {
                     chatId: selectedChat._id,
                     chatName: groupChatName
@@ -284,52 +292,144 @@ const UpdateChatModal = () => {
     }
 
 
+    const handleChange = async ( value, value_id ) => {
+
+        let response;
+        let body = {
+            chatId: selectedChat._id,
+            value: value,
+            value_id: value_id
+        };
+        // body[ value_id ] = value;
+
+        try {
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${ user.token }`,
+                },
+            };
+            response = await axios.put(
+                `/api/chat/update`,
+                body,
+                config
+            );
+
+            let updatedChat = response.data.data;
+
+            // Replace selected chat's data
+            // setSelectedChat( updatedChat );
+
+            // Remove current iteration of this chat from chats list, and add the new one. 
+            setFetchChats( true );
+
+        } catch ( error ) {
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( msg );
+        }
+    }
+
     return (
         selectedChat ? (
             <>
-                <IconButton display={ { base: 'flex' } } icon={ <ViewIcon /> } onClick={ onOpen } />
+                <IconButton
+                    display={ { base: 'flex' } }
+                    size={ "sm" }
+                    icon={ <ViewIcon /> }
+                    onClick={ onOpen }
+                    bg={ '#00000000' }
+                />
 
                 <Modal isOpen={ isOpen } onClose={ onClose }>
                     <ModalOverlay />
                     <ModalContent>
-                        <ModalHeader fontSize={ '35px' } fontFamily={ "Work sans" } display={ 'flex' } justifyContent={ 'center' }>
+                        <ModalHeader
+                            fontSize={ '35px' }
+                            fontFamily={ "Work sans" }
+                            display={ 'flex' }
+                            justifyContent={ 'center' }
+                            bg={ useColorModeValue(
+                                'gray.light',
+                                'gray.dark'
+                            ) }
+                        >
                             { selectedChat.chatName }
                         </ModalHeader>
                         <ModalCloseButton />
-                        <ModalBody>
+                        <ModalBody
+
+                            bg={ useColorModeValue(
+                                'gray.light',
+                                'gray.dark'
+                            ) }
+                        >
 
                             <Box w="100%" d="flex" flexWrap="wrap">
                                 <Text>Users: </Text>
                                 { selectedChat.users.map( ( u ) => (
                                     <UserBadgeItem
-                                        isUser={u._id === user._id}
+                                        isUser={ u._id === user._id }
                                         key={ u._id }
-                                        user={ u }
+                                        userData={ u }
                                         handleFunction={ () => handleRemove( u ) }
                                     />
                                 ) ) }
                             </Box>
 
                             { /* Rename controls */ }
-                            <FormControl display={ 'flex' }>
+                            <FormControl id={ 'chatName' } display={ 'flex' }>
                                 <Input placeholder='Chat Name' mb={ 3 }
                                     defaultValue={ selectedChat.chatName }
+                                    size={ 'xs' }
                                     value={ groupChatName }
                                     onChange={ ( e ) => setGroupChatName( e.target.value ) } />
                                 <Button
                                     variant="solid"
                                     isLoading={ renameLoading }
                                     colorScheme='teal'
+                                    size={ 'xs' }
                                     ml={ 1 }
                                     onClick={ handleRename }>Save</Button>
                             </FormControl>
 
-                            <FormControl>
+                            <FormControl id={ 'search' }>
                                 <Input
                                     placeholder="Add User to group"
+                                    size={ 'xs' }
                                     mb={ 1 }
                                     onChange={ ( e ) => handleSearch( e.target.value ) }
                                 />
+                            </FormControl>
+
+                            <FormControl id={ 'public' }>
+                                <InputGroup
+                                    border={ '1px' }
+                                    borderColor={ 'blackAlpha.300' }
+                                    size={ 'xs' }
+                                >
+                                    <InputLeftAddon
+                                        width={ '5rem' }
+                                    >Set Public</InputLeftAddon>
+                                    <CheckboxGroup
+                                        defaultValue={ [
+                                            selectedChat?.isPublicChat ? 'public' : undefined
+                                        ] }
+                                    >
+                                        <Checkbox
+                                            value={ 'public' }
+                                            size={ 'lg' }
+                                            px={ 2 }
+                                            // isChecked={ selectedChat?.isPublicChat }
+                                            onChange={ ( e ) => handleChange(
+                                                e.target.checked,
+                                                "isPublicChat"
+                                            ) }
+                                        />
+                                    </CheckboxGroup>
+                                </InputGroup>
                             </FormControl>
 
                             { loading ? (
@@ -345,11 +445,28 @@ const UpdateChatModal = () => {
                             ) }
                         </ModalBody>
 
-                        <ModalFooter>
-                            <Button colorScheme='blue' mr={ 3 } onClick={ onClose }>
+                        <ModalFooter
+
+                            bg={ useColorModeValue(
+                                'gray.light',
+                                'gray.dark'
+                            ) }
+                        >
+                            <Button
+                                colorScheme='blue'
+                                mr={ 3 }
+                                onClick={ onClose }
+                                size={ 'xs' }
+                            >
                                 Close
                             </Button>
-                            <Button onClick={ () => { handleRemove( user ) } } colorScheme={ 'red' }>Leave Group</Button>
+                            <Button
+                                onClick={ () => { handleRemove( user ) } }
+                                size={ 'xs' }
+                                colorScheme={ 'red' }
+                            >
+                                Leave Group
+                            </Button>
                         </ModalFooter>
                     </ModalContent>
                 </Modal>

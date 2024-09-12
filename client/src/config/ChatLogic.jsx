@@ -1,3 +1,5 @@
+import * as util from 'akashatools';
+
 export const getSender = ( loggedUser, users ) => {
     return users[ 0 ]._id === loggedUser._id
         ? users[ 1 ].name
@@ -54,3 +56,17 @@ export const isSameSenderMargin = ( messages, m, i, userId ) => {
 export const isSameUser = ( messages, m, i ) => {
     return i > 0 && messages[ i - 1 ].sender._id === m.sender._id;
 };
+
+export const getChatUsers = ( users ) => {
+    if ( util.val.isValidArray( users, true ) ) {
+        // Is a valid array of users. 
+        return users.map( ( u ) => {
+            return (
+                u.display_name
+            );
+        } );
+    }
+    else {
+        return [];
+    }
+}

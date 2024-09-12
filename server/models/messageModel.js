@@ -14,6 +14,25 @@ const messageModel = mongoose.Schema( {
         trim: true
     },
 
+    // content: {
+    //     type: {
+    //         text: {
+    //             type: String,
+    //             default: "",
+    //             trim: true
+    //         },
+    //         img: {
+    //             type: String,
+    //             default: ""
+    //         },
+    //     }
+    // },
+
+    attachments: {
+        type: [ String ],
+        default: []
+    },
+
     // ID of the chat this message belongs to. 
     chat: {
         type: mongoose.Schema.Types.ObjectId,

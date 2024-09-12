@@ -4,15 +4,25 @@ import { Box, useToast, useColorModeValue, Button, Stack, Text } from '@chakra-u
 import { ChatState } from '../../context/ChatProvider';
 import { useEffect, useState } from 'preact/hooks';
 import { AddIcon } from '@chakra-ui/icons';
-import { getSender } from '../../config/ChatLogic';
+import { getSender, getChatUsers } from '../../config/ChatLogic';
 import ChatLoading from './ChatLoading';
 import CreateChatModal from './CreateChatModal';
-import UserListItem from './UserListItem';
+import UserListItem from '../User/UserListItem';
+import RoomList from './RoomList';
 
 const ChatList = () => {
-    const { user, selectedChat, setSelectedChat, chats, setChats, fetchChats, setFetchChats } = ChatState();
+    const {
+        user,
+        selectedChat,
+        setSelectedChat,
+        chats,
+        setChats,
+        fetchChats,
+        setFetchChats
+    } = ChatState();
     const [ loggedUser, setLoggedUser ] = useState();
     const toast = useToast();
+    const [ rooms, setRooms ] = useState( [] );
 
     const getChats = async () => {
         // Fetch the list of available message logs, between you and another person or group messages. 
@@ -31,14 +41,6 @@ const ChatList = () => {
 
             const response = await axios.get( "/api/chat", config );
 
-            console.log(
-                "ChatList",
-                " :: ", "getChats",
-                " :: ", "token = ", user.token,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
-
             if ( response.data ) {
                 let data = response.data.data;
                 setChats( data );
@@ -52,9 +54,63 @@ const ChatList = () => {
                 } );
             }
         } catch ( error ) {
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( "getChats :: msg = ", msg );
             toast( {
                 title: "Error",
-                description: error.message,
+                description: msg,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom-left",
+            } );
+        } finally {
+            setFetchChats( false );
+        }
+    };
+
+    const getPublicChats = async () => {
+        // Fetch the list of available message logs, between you and another person or group messages. 
+        if ( !user ) {
+            console.log( "ChatList :: getChats :: No user logged in." );
+            return;
+        }
+        try {
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${ user.token }`,
+                },
+            };
+
+            const response = await axios.get( "/api/chat/rooms", config );
+
+            if ( response.data ) {
+                let data = response.data.data;
+                setRooms( data );
+                console.log( "getPublicChats :: data = ", data );
+                toast( {
+                    title: "Success",
+                    description: response.data.message,
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                    position: "bottom-left",
+                } );
+            }
+        } catch ( error ) {
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( "getPublicChats :: error :: msg = ", msg );
+            toast( {
+                title: "Error",
+                description: msg,
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -62,6 +118,11 @@ const ChatList = () => {
             } );
         }
     };
+
+    useEffect( () => {
+        // Fetch public chats for joinable rooms dropdown. 
+        getPublicChats();
+    }, [] );
 
     useEffect( () => {
         setLoggedUser( JSON.parse( localStorage.getItem( "userInfo" ) ) );
@@ -83,143 +144,124 @@ const ChatList = () => {
             borderWidth="1px"
         >
             <Box
-                p={ '0.1125em' }
-                fontSize={ { base: "24px", md: "28px" } }
-                fontFamily="Work sans"
+                className="chat-list-panel-header"
                 display="flex"
                 w="100%"
                 justifyContent={ 'space-between' }
                 alignItems="center"
                 overflowY="hidden"
                 borderRadius="sm"
-                bg={ useColorModeValue( 'white', 'gray.dark' ) }
+                p={ `0.125em` }
+                h={ `${ 32 }px` }
+                maxH={ `${ 32 }px` }
+                // bg={ useColorModeValue( 'white', 'gray.dark' ) }
+                bg={
+                    useColorModeValue(
+                        'blackAlpha.900',
+                        'blackAlpha.100'
+                    )
+                }
             >
-                Chats
+                <Text
+                    className="chat-list-panel-header-title"
+                    // fontSize={ { base: "18px", md: "14px", lg: "10px" } }
+                    fontSize={ [ 'sm', 'md', 'lg', 'xl' ] }
+                >
+                    Chats
+                </Text>
+
+                {
+                    // Public rooms list select input.
+                }
+
+                <RoomList rooms={ rooms } handleFunc={ () => handleJoinRoom } />
+
+                {
+                    // NEW CHAT button
+                }
                 <Button
                     display="flex"
-                    fontSize={ { base: "17px", md: "10px", lg: "17px" } }
-                    rightIcon={ <AddIcon /> }
+                    size={ 'sm' }
+                    maxH={ `${ 28 }px` }
+                    p={ 1 }
+                // fontSize={ { base: "12px", md: "10px", lg: "12px" } }
+                // rightIcon={ <AddIcon /> }
                 >
                     <CreateChatModal>
-                        New Chat
+                        <AddIcon />
                     </CreateChatModal>
                 </Button>
             </Box>
 
             <hr />
+
             <Box
+                className="chat-list-panel-list"
                 d="flex"
-                flexDir="column"
                 justifyContent={ 'flex-end' }
                 alignContent={ 'flex-start' }
-                p={ '0.0125em' }
-                // bg="#F8F8F8"
                 w="100%"
                 h="100%"
-                borderRadius="sm"
-                overflowY="hidden"
+                overflowY={ 'auto' }
                 bg={ useColorModeValue( 'white', 'gray.dark' ) }
             >
                 {
                     chats ? (
-                        <Stack overflowY={ 'scroll' }>
+                        <Stack
+                            flexDir="column"
+                            gap={ '0px' }
+                            px={ '0.0125em' }
+
+                        >
                             {
                                 chats.map( ( chat, index ) => {
-                                    console.log( "ChatList.jsx :: chat #", index, " :: ", " = ", chat );
+                                    // console.log( "ChatList.jsx :: chat #", index, " :: ", " = ", chat );
                                     return (
 
                                         <Box
                                             onClick={ () => setSelectedChat( chat ) }
                                             cursor="pointer"
                                             color={ selectedChat === chat ? "white" : "black" }
-                                            py={ '0.0125em' }
+                                            py={ '0.25em' }
                                             px={ '0.25em' }
                                             borderRadius="sm"
+                                            boxShadow={
+                                                selectedChat === chat
+                                                    ?
+                                                    'inset 0px 0px 10px -4px #000000'
+                                                    :
+                                                    'none'
+                                            }
                                             key={ chat._id }
                                             bg={
-                                                useColorModeValue( selectedChat === chat ? "#38B2AC" : "#E8E8E8", selectedChat === chat ? 'gray.700' : 'gray.dark' )
+                                                useColorModeValue(
+                                                    selectedChat === chat
+                                                        ?
+                                                        "#2a5654"
+                                                        :
+                                                        "#E8E8E8",
+                                                    selectedChat === chat
+                                                        ?
+                                                        'blackAlpha.200'
+                                                        :
+                                                        'blackAlpha.100'
+                                                )
                                             }
                                             _hover={ {
-                                                backgroundColor: useColorModeValue( 'gray.100', 'gray.800' ),
+                                                backgroundColor: useColorModeValue( 'gray.100', 'blackAlpha.200' ),
                                                 color: useColorModeValue( 'gray.800', 'gray.100' ),
+                                                boxShadow: `inset 0px 0px 12px -8px #000000`,
                                             } }
                                         >
-                                            <Text
-                                                fontSize={ {
-                                                    base: '0.90em',
-                                                    md: '0.90em',
-                                                } }
-                                                pt={ '0.125em' }
-                                                px={ '0.0em' }
-                                            >
-                                                {
-                                                    !chat.isGroupChat
-                                                        ?
-                                                        (
-                                                            <Text
-                                                                fontSize={ {
-                                                                    base: '0.85em',
-                                                                    md: '0.75em',
-                                                                } }
-                                                                px={ '0.01em' }
-                                                                fontFamily={ 'Work sans' }
-                                                                color={ useColorModeValue( 'gray.dark', 'gray.light' ) }
-                                                            >
-                                                                {
-                                                                    getSender( loggedUser, chat.users )
-                                                                }
 
-                                                            </Text>
-                                                        )
-                                                        :
-                                                        (
-
-                                                            <Box
-                                                                px={ '0.0225em' }
-                                                                w={ '100%' }
-                                                                display={ 'flex' }
-                                                                flexDir={ 'column' }
-                                                                justifyContent={ {
-                                                                    base: 'space-between',
-                                                                } }
-                                                                alignItems={ 'flex-start' }
-                                                            >
-                                                                <Text
-                                                                    fontSize={ {
-                                                                        base: '1.125em',
-                                                                        md: '1.125em',
-                                                                    } }
-                                                                    fontWeight={ 400 }
-                                                                    letterSpacing={ 1.125 }
-                                                                    fontFamily={ 'Work sans' }>
-                                                                    { chat.chatName }
-                                                                </Text>
-                                                                <Text
-                                                                    fontSize={ {
-                                                                        base: '0.85em',
-                                                                        md: '0.75em',
-                                                                    } }
-                                                                    // pb={ '0.125em' }
-                                                                    px={ '0.01em' }
-                                                                    fontFamily={ 'Work sans' }
-                                                                    color={ useColorModeValue( 'gray.600', 'gray.400' ) }
-                                                                >
-                                                                    { chat.users.map( ( u ) => {
-                                                                        return (
-                                                                            u.display_name
-                                                                        );
-                                                                    } ).join( ', ' ) }
-                                                                </Text>
-                                                            </Box>
-                                                        )
-                                                }
-                                            </Text>
-
+                                            {
+                                                // Chat name
+                                            }
                                             <Box
                                                 px={ '0.0225em' }
-                                                gap={ '0.125em' }
                                                 w={ '100%' }
                                                 display={ 'flex' }
+                                                flexDir={ 'column' }
                                                 justifyContent={ {
                                                     base: 'space-between',
                                                 } }
@@ -227,37 +269,95 @@ const ChatList = () => {
                                             >
 
                                                 <Text
-                                                    color={ 'blue' }
-                                                    fontSize={ {
-                                                        base: '0.85em',
-                                                        md: '0.75em',
-                                                    } }
-                                                    fontFamily={ 'Work sans' }
-                                                    display={ 'flex' }
-                                                >
-                                                    { '>' }
-                                                </Text>
-
-                                                <Text
-                                                    fontSize={ {
-                                                        base: '0.85em',
-                                                        md: '0.75em',
-                                                    } }
-                                                    pb={ '0.125em' }
+                                                    letterSpacing={ 1.05 }
                                                     px={ '0.01em' }
-                                                    w={ '100%' }
-                                                    fontFamily={ 'Work sans' }
-                                                    display={ 'flex' }
-                                                    justifyContent={ {
-                                                        base: 'flex-start',
+                                                    // color={ useColorModeValue( 'violet.900', 'violet.100' ) }
+                                                    color={ useColorModeValue( 'gray.900', 'gray.100' ) }
+                                                    // fontSize={ [ 'sm', 'md', 'lg', 'xl' ] }
+                                                    fontSize={ {
+                                                        base: `${ 12 }px`,
+                                                        sm: `${ 12 }px`,
+                                                        md: `${ 12 }px`,
+                                                        lg: `${ 14 }px`
                                                     } }
-                                                    alignItems={ 'center' }>
+                                                >
                                                     {
-                                                        chat.latestMessage?.content?.toString()
+                                                        !chat.isGroupChat
+                                                            ?
+                                                            (
+                                                                getSender( loggedUser, chat.users )
+                                                            )
+                                                            :
+                                                            (
+
+                                                                chat.chatName
+                                                                    ?
+                                                                    // Has a chat name, show it instead of user list. 
+                                                                    ( chat.chatName )
+                                                                    :
+                                                                    // Has no chat name set, use user list. 
+                                                                    ( getChatUsers( chat.users ).join( ', ' ) )
+                                                            )
+
                                                     }
                                                 </Text>
+
                                             </Box>
 
+                                            {
+                                                // Last message in the conversation. 
+                                                // Trim if too long, add ellipsis after. 
+                                            }
+                                            {
+                                                chat.latestMessage ?
+                                                    (
+                                                        <Box
+                                                            px={ '0.0225em' }
+                                                            gap={ '0.125em' }
+                                                            w={ '100%' }
+                                                            display={ 'flex' }
+                                                            justifyContent={ {
+                                                                base: 'space-between',
+                                                            } }
+                                                            alignItems={ 'flex-start' }
+                                                        >
+                                                            <Text
+                                                                color={ 'blue' }
+                                                                fontSize={ {
+                                                                    base: '0.85em',
+                                                                    md: '0.75em',
+                                                                } }
+                                                                fontFamily={ 'Work sans' }
+                                                                display={ 'flex' }
+                                                            >
+                                                                { '>' }
+                                                            </Text>
+
+                                                            <Text
+                                                                fontSize={ {
+                                                                    base: '0.85em',
+                                                                    md: '0.75em',
+                                                                } }
+                                                                pb={ '0.125em' }
+                                                                px={ '0.01em' }
+                                                                w={ '100%' }
+                                                                fontFamily={ 'Work sans' }
+                                                                display={ 'flex' }
+                                                                justifyContent={ {
+                                                                    base: 'flex-start',
+                                                                } }
+                                                                alignItems={ 'center' }>
+                                                                {
+                                                                    chat.latestMessage.content?.toString()
+                                                                }
+                                                            </Text>
+                                                        </Box>
+                                                    )
+                                                    :
+                                                    (
+                                                        <></>
+                                                    )
+                                            }
                                         </Box>
                                     );
                                 } )

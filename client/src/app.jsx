@@ -7,8 +7,8 @@ import {
     Navigate,
     Outlet,
 } from "react-router-dom";
-import preactLogo from './assets/preact.svg';
-import viteLogo from '/vite.svg';
+// import preactLogo from './assets/preact.svg';
+// import viteLogo from '/vite.svg';
 import './app.css';
 import HomePage from './pages/HomePage';
 import ChatPage from './pages/ChatPage';

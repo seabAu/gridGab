@@ -19,7 +19,7 @@
         "React",
         "Express",
         "Node",
-        "Chat-app", 
+        "Chat-app",
         "Chakra-UI"
     ],
     "dependencies": {

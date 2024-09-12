@@ -1,11 +1,13 @@
-import { render } from 'preact'
-import { App } from './app.jsx'
-import './index.css'
+import { menuAnatomy } from '@chakra-ui/anatomy'
+import { createMultiStyleConfigHelpers, defineStyle } from '@chakra-ui/react'
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react'
+
+const { definePartsStyle, defineMultiStyleConfig } = createMultiStyleConfigHelpers( menuAnatomy.keys )
+
+import colors from './colors/colors.jsx';
 import { mode } from '@chakra-ui/theme-tools'
-import { BrowserRouter } from 'react-router-dom';
-import ChatProvider from './context/ChatProvider.jsx';
-import theme from './theme/styles.jsx'
+
+
 
 // Set styling based on dark/light mode.
 const styles = {
@@ -19,6 +21,7 @@ const styles = {
         div: {
             fontSize: 'sm',
             color: mode( '#101010', 'gray.100', '#800845' )( props ),
+            // bg: mode( 'gray.200', 'gray.dark', '#800845' )( props ),
             gap: '0px',
             // borderRadius: "sm"
         },
@@ -50,12 +53,24 @@ const styles = {
                 color: mode( 'violet.dark', 'violet.light' )( props ),
             },
         },
+        input: {
+            bg: mode( 'gray.light', 'gray.dark' )( props ),
+            color: mode( 'gray.800', 'gray.200' )( props ),
+            _hover: {
+                bg: mode( 'white', 'gray.dark' )( props ),
+                color: mode( 'violet.dark', 'violet.light' )( props ),
+            },
+            p: '1',
+            fontSize: '12px',
+            size: 'xs'
+        },
         list: {
             // this will style the MenuList component
             // py: '4',
             borderRadius: 'xl',
             border: 'none',
             bg: 'teal.500',
+            size: 'xs'
         },
         item: {
             // this will style the MenuItem and MenuItemOption components
@@ -92,6 +107,15 @@ const styles = {
             borderBottom: '2px dotted',
         },
 
+        // overlay: {
+        //     bg: 'blackAlpha.200', //change the background
+        // },
+        // dialog: {
+        //     borderRadius: 'md',
+        //     bg: `purple.100`,
+        // },
+
+
     } )
 }
 
@@ -100,34 +124,7 @@ const config = {
     useSystemColorMode: true
 };
 
-const colors = {
-    gray: {
-        light: '#616161',
-        dark: '#1e1e1e'
-    },
-    violet: {
-        light: '#ec0f7d',
-        mid: '#800845',
-        dark: '#300319',
-        '100': '#483740',
-        '200': '#eb4f9d',
-        '500': '#800845',
-        '800': '#3c0521',
-        '900': '#1c0510',
-    }
-}
 
-// const theme = extendTheme( { config, styles, colors } );
+const theme = extendTheme( { config, styles, colors } );
 
-render(
-    <ChakraProvider theme={ theme }>
-        <ColorModeScript initialColorMode={ theme.config.initialColorMode } />
-        <BrowserRouter>
-            <ChatProvider>
-                <App />
-            </ChatProvider>
-        </BrowserRouter>
-    </ChakraProvider>
-    ,
-    document.getElementById( 'app' )
-);
+export default theme;

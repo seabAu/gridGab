@@ -18,7 +18,7 @@ const ChatMessages = ( { messages } ) => {
             { messages &&
                 messages.map( ( m, i ) => {
                     let sameUser = isSameUser( messages, m, i, user._id );
-                    let sameSender = isSameSender( messages, m, i, user._id );
+                    let sameSender = isSameUser( messages, m, i, user._id );
                     let isLastMessageFromSender = isLastMessage( messages, i, user._id );
                     return (
                         <div style={ {

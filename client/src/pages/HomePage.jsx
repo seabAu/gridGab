@@ -8,6 +8,8 @@ import {
     TabPanels,
     Tabs,
     Text,
+    useColorModeValue,
+    useColorMode,
 } from '@chakra-ui/react';
 import Login from '../components/auth/Login';
 import Signup from '../components/auth/Signup';
@@ -19,10 +21,11 @@ const HomePage = ( props ) => {
         classes = '',
         styles = {}
     } = props;
+    const { colorMode, toggleColorMode } = useColorMode();
 
     const navigate = useNavigate();
 
-    useEffect(() => {
+    useEffect( () => {
         const userInfo = JSON.parse(
             localStorage.getItem( "userInfo" )
         );
@@ -41,7 +44,6 @@ const HomePage = ( props ) => {
                 d='flex'
                 justifyContent='center'
                 p={ 3 }
-                bg={ `white` }
                 w={ `100%` }
                 m={ `40px 0px 15px 0px` }
                 borderRadius={ `lg` }
@@ -50,19 +52,19 @@ const HomePage = ( props ) => {
                     fontSize={ `4xl` }
                     fontFamily={ `Work sans` }
                     color={ `black` }>
-                    GridChat
+                    gridGab
                 </Text>
             </Box>
 
             <Box
-                bg='white'
                 w='100%'
                 p={ 4 }
                 borderRadius='lg'
                 borderWidth='1px'>
                 <Tabs
                     isFitted
-                    variant='soft-rounded'>
+                    variant='soft-rounded'
+                >
                     <TabList mb='1em'>
                         <Tab>Login</Tab>
                         <Tab>Sign Up</Tab>

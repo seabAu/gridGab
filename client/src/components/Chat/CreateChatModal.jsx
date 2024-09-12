@@ -13,26 +13,49 @@ import {
     Input,
     useToast,
     Box,
+    useColorModeValue,
+    useColorMode,
+    InputGroup,
+    InputLeftAddon,
+    Checkbox,
+    InputLeftElement,
+    VStack,
+    Spinner,
+    CheckboxGroup,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { ChatState } from "../../context/ChatProvider";
-import UserBadgeItem from "./UserBadgeItem";
-import UserListItem from "./UserListItem";
+import UserBadgeItem from "../User/UserBadgeItem";
+import UserListItem from "../User/UserListItem";
+import ChatLoading from "./ChatLoading";
 
 const CreateChatModal = ( { children } ) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const [ groupChatName, setGroupChatName ] = useState();
+    const { colorMode, toggleColorMode } = useColorMode();
+    const initialRef = useRef( null );
+    const finalRef = useRef( null );
+    const [ groupChatName, setGroupChatName ] = useState( "" );
+    const [ isPublic, setIsPublic ] = useState( false );
     const [ selectedUsers, setSelectedUsers ] = useState( [] );
     const [ search, setSearch ] = useState( "" );
     const [ searchResult, setSearchResult ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
     const toast = useToast();
 
-    const { user, chats, setChats, fetchChats, setFetchChats, selectedChat, setSelectedChat } = ChatState();
+    const {
+        user,
+        chats,
+        setChats,
+        fetchChats,
+        setFetchChats,
+        selectedChat,
+        setSelectedChat
+    } = ChatState();
 
-    const handleGroup = ( userToAdd ) => {
-        if ( selectedUsers.includes( userToAdd ) ) {
+    const handleGroup = ( newUser ) => {
+        if ( selectedUsers.find( ( u ) => u._id === newUser._id ) ) {
+            // if ( selectedUsers.includes( userToAdd ) ) {
             toast( {
                 title: "User already added",
                 status: "warning",
@@ -43,7 +66,7 @@ const CreateChatModal = ( { children } ) => {
             return;
         }
 
-        setSelectedUsers( [ ...selectedUsers, userToAdd ] );
+        setSelectedUsers( [ ...selectedUsers, newUser ] );
     };
 
     const handleSearch = async ( query ) => {
@@ -62,15 +85,15 @@ const CreateChatModal = ( { children } ) => {
                 },
             };
             const response = await axios.get( `/api/user?search=${ search }`, config );
-            
-            console.log(
-                "CreateChatModal",
-                " :: ", "handleSearch",
-                " :: ", "token = ", user.token,
-                " :: ", "search = ", search,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
+
+            // console.log(
+            //     "CreateChatModal",
+            //     " :: ", "handleSearch",
+            //     " :: ", "token = ", user.token,
+            //     " :: ", "search = ", search,
+            //     " :: ", "response = ", response,
+            //     " :: ", "response.data.data = ", response.data.data
+            // );
 
             let data = response.data.data;
 
@@ -93,7 +116,7 @@ const CreateChatModal = ( { children } ) => {
     };
 
     const handleSubmit = async () => {
-        if ( !groupChatName || !selectedUsers ) {
+        if ( !selectedUsers ) {
             toast( {
                 title: "Please fill all the fields",
                 status: "warning",
@@ -113,28 +136,31 @@ const CreateChatModal = ( { children } ) => {
                 },
             };
             response = await axios.post(
-                `/api/chat/group`,
+                `/api/chat/new`,
                 {
                     chatName: groupChatName,
+                    isPublicChat: isPublic,
                     users: JSON.stringify( selectedUsers.map( ( u ) => u._id ) ),
+                    chatIcon: '',
+                    chatStatus: '',
                 },
                 config
             );
 
-            console.log(
-                "CreateChatModal",
-                " :: ", "handleSubmit",
-                " :: ", "token = ", user.token,
-                " :: ", "groupChatName = ", groupChatName,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
+            // console.log(
+            //     "CreateChatModal",
+            //     " :: ", "handleSubmit",
+            //     " :: ", "token = ", user.token,
+            //     " :: ", "groupChatName = ", groupChatName,
+            //     " :: ", "response = ", response,
+            //     " :: ", "response.data.data = ", response.data.data
+            // );
 
             let newChat = response.data.data;
 
             setChats( [ newChat, ...chats ] );
             setSelectedChat( newChat );
-            
+
             // Re-fetch the chats
             setFetchChats( true );
 
@@ -148,13 +174,13 @@ const CreateChatModal = ( { children } ) => {
                 position: "bottom",
             } );
         } catch ( error ) {
-            console.log(
-                "CreateChatModal",
-                " :: ", "handleSubmit",
-                " :: ", "ERROR",
-                " :: ", "response = ", response,
-                " :: ", "error = ", error,
-            );
+            // console.log(
+            //     "CreateChatModal",
+            //     " :: ", "handleSubmit",
+            //     " :: ", "ERROR",
+            //     " :: ", "response = ", response,
+            //     " :: ", "error = ", error,
+            // );
 
             toast( {
                 title: "Failed to create group chat!",
@@ -168,63 +194,159 @@ const CreateChatModal = ( { children } ) => {
         }
     };
 
+    const handleChange = async ( value, value_id ) => {
+
+    }
+
     return (
         <>
             <span onClick={ onOpen }>{ children }</span>
 
-            <Modal onClose={ onClose } isOpen={ isOpen } isCentered>
-                <ModalOverlay />
-                <ModalContent>
+            <Modal
+                onClose={ onClose }
+                isOpen={ isOpen }
+                isCentered
+                initialFocusRef={ initialRef }
+                finalFocusRef={ finalRef }
+                closeOnOverlayClick={ true }
+                scrollBehavior={ 'inside' }
+                size={ 'lg' }
+            >
+                <ModalOverlay
+                // bg={ 'blackAlpha.300' }
+                // backdropFilter={ 'blur(10px) hue-rotate(90deg)' }
+                />
+                <ModalContent
+                    bg={ useColorModeValue(
+                        'gray.light',
+                        'gray.dark'
+                    ) }>
                     <ModalHeader
-                        fontSize="35px"
+                        // style={ { width: '100%' } }
                         fontFamily="Work sans"
-                        d="flex"
-                        justifyContent="center"
+                        fontSize={ '18px' }
+                        display={ "flex" }
+                        justifyContent={ "center" }
+                        p={ 2 }
+                        m={ 0 }
                     >
                         Create Group Chat
                     </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody d="flex" flexDir="column" alignItems="center">
-                        <FormControl>
-                            <Input
-                                placeholder="Chat Name"
-                                mb={ 3 }
-                                onChange={ ( e ) => setGroupChatName( e.target.value ) }
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <Input
-                                placeholder="Add Users"
-                                mb={ 1 }
-                                onChange={ ( e ) => handleSearch( e.target.value ) }
-                            />
-                        </FormControl>
-                        <Box w="100%" d="flex" flexWrap="wrap">
+                    <ModalCloseButton size={ 'sm' } />
+                    <ModalBody
+                        display={ "flex" }
+                        flexDir={ "column" }
+                        alignItems={ "center" }
+                    >
+                        <VStack
+                            gap={ `${ 1 }rem` }
+                            mb={ `${ 1 }rem` }
+                            display={ "flex" }
+                            flexDir={ "column" }
+                            alignItems={ "center" }
+                            width={ '100%' }
+                        >
+                            <FormControl id={ 'chatName' }>
+                                <InputGroup size={ 'xs' }>
+                                    <InputLeftAddon width={ '5rem' }>Chat Name</InputLeftAddon>
+                                    <Input
+                                        onChange={ ( e ) => setGroupChatName( e.target.value ) }
+                                    />
+                                </InputGroup>
+                            </FormControl>
+
+                            <FormControl id={ 'usersearch' }>
+                                <InputGroup size={ 'xs' }>
+                                    <InputLeftAddon width={ '5rem' }>Users</InputLeftAddon>
+                                    <Input
+                                        onChange={ ( e ) => handleSearch( e.target.value ) }
+                                    />
+                                </InputGroup>
+                            </FormControl>
+
+                            <FormControl id={ 'public' }>
+                                <InputGroup
+                                    border={ '1px' }
+                                    borderColor={ 'blackAlpha.300' }
+                                    size={ 'xs' }
+                                >
+                                    <InputLeftAddon
+                                        width={ '5rem' }
+                                    >Set Public</InputLeftAddon>
+                                    <CheckboxGroup
+                                        defaultValue={ [
+                                            isPublic ? 'public' : undefined
+                                        ] }
+                                    >
+                                        <Checkbox
+                                            value={ 'public' }
+                                            size={ 'lg' }
+                                            px={ 2 }
+                                            // isChecked={ selectedChat?.isPublicChat }
+                                            onChange={ ( e ) => { setIsPublic( e.target.checked ); } }
+                                        />
+                                    </CheckboxGroup>
+                                </InputGroup>
+                            </FormControl>
+
+                        </VStack>
+
+                        <Box
+                            w={ "100%" }
+                            display={ "flex" }
+                            flexWrap={ "wrap" }
+                        >
                             { selectedUsers.map( ( u ) => (
                                 <UserBadgeItem
                                     key={ u._id }
-                                    user={ u }
-                                    handleFunction={ () => handleDelete( u ) }
+                                    userData={ u }
+                                    // handleFunction={ () => handleDelete( u ) }
+                                    // Change handlefunction to what happens when you click on the badge overall. 
+                                    // For badges, it'll show their profile once implemented. 
+                                    handleFunction={ () => { } }
+                                    closeFunction={ () => handleDelete( u ) }
                                 />
                             ) ) }
                         </Box>
-                        { loading ? (
-                            // <ChatLoading />
-                            <div>Loading...</div>
-                        ) : (
-                            searchResult?.filter( (resultUser)=>( !selectedUsers.includes( resultUser ) ) )
-                                // ?.slice( 0, 10 )
-                                .map( ( user ) => (
-                                    <UserListItem
-                                        key={ user._id }
-                                        user={ user }
-                                        handleFunction={ () => handleGroup( user ) }
-                                    />
-                                ) )
-                        ) }
+
+                        <VStack
+                            w={ "100%" }
+                            display={ "flex" }
+                            flexWrap={ "nowrap" }
+                            gap={ 1 }
+                            // bg={ 'blackAlpha.300' }
+                            boxShadow={ `inset 0px 0px 12px -8px #000000` }
+
+                            overflowY={ 'auto' }
+                            px={ 1 }
+                            py={ 1 }
+                        >
+                            { loading ? (
+                                <ChatLoading />
+                            ) : (
+                                searchResult?.filter( ( resultUser ) => ( !selectedUsers.includes( resultUser ) ) )
+                                    // ?.slice( 0, 10 )
+                                    .map( ( u ) => (
+                                        <UserListItem
+                                            key={ u._id }
+                                            userData={ u }
+                                            handleFunction={ () => handleGroup( u ) }
+                                        />
+                                    ) )
+                            ) }
+                        </VStack>
                     </ModalBody>
-                    <ModalFooter>
-                        <Button onClick={ handleSubmit } colorScheme="blue">
+                    <ModalFooter
+                        p={ 1 }
+                        bg={ 'blackAlpha.300' }
+                        borderEndEndRadius={ 'md' }
+                        borderEndStartRadius={ 'md' }
+                    >
+                        <Button
+                            onClick={ handleSubmit }
+                            colorScheme="blue"
+                            size={ 'xs' }
+                        >
                             Create Chat
                         </Button>
                     </ModalFooter>

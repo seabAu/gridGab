@@ -1,27 +1,33 @@
 import React from 'react';
 import { ChatState } from '../../context/ChatProvider';
 import {
+    AvatarGroup,
     Box,
     FormControl,
     IconButton,
     Input,
     Spinner,
     Text,
+    useColorMode,
     useColorModeValue,
     useToast,
+    Wrap,
+    WrapItem,
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import { getSender, getSenderData } from '../../config/ChatLogic';
-import ProfileModal from '../Page/ProfileModal';
+import ProfileModal from '../User/ProfileModal';
 import UpdateChatModal from './UpdateChatModal';
 import { useEffect, useState } from 'preact/hooks';
 import axios from 'axios';
 import ChatMessages from './ChatMessages';
+import * as util from 'akashatools';
 
 
 // Socket.io import and setup.
 import { io } from 'socket.io-client';
 import ChatTypingIndicator from './ChatTypingIndicator';
+import UserAvatar from '../User/UserAvatar';
 const ENDPOINT = "http://localhost:5025";
 let socket;
 
@@ -43,6 +49,7 @@ const ChatContent = () => {
         setNotifications,
     } = ChatState();
     const toast = useToast();
+    const { colorMode, toggleColorMode } = useColorMode();
 
     const [ messages, setMessages ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
@@ -144,17 +151,6 @@ const ChatContent = () => {
                 config
             );
 
-            // console.log(
-            //     "ChatContent",
-            //     " :: ", "getMessages",
-            //     " :: ", "token = ", user.token,
-            //     " :: ", "response = ", response,
-            //     " :: ", "response.data.data = ", response.data.data
-            // );
-            // const data = response.data;
-
-            // if ( response.data ) {
-
             let responseMsg = response.data.data;
             setLoading( false );
 
@@ -164,21 +160,9 @@ const ChatContent = () => {
 
             // Push scrollbar down if applicable.
 
-            // toast( {
-            //     title: "Successfully fetched messages.",
-            //     description: response.data.message,
-            //     status: "success",
-            //     duration: 5000,
-            //     isClosable: true,
-            //     position: "bottom",
-            // } );
-            // }
-
             // Join this user to the selected chatroom's ID. 
             socket.emit( 'chat.join', selectedChat._id );
-
         } catch ( error ) {
-
             toast( {
                 title: "Error",
                 description: "Failed to load messages. Please refresh the page: " + error.message,
@@ -219,13 +203,13 @@ const ChatContent = () => {
                     config
                 );
 
-                console.log(
-                    "ChatContent",
-                    " :: ", "sendMessage",
-                    " :: ", "token = ", user.token,
-                    " :: ", "response = ", response,
-                    " :: ", "response.data.data = ", response.data.data
-                );
+                // console.log(
+                //     "ChatContent",
+                //     " :: ", "sendMessage",
+                //     " :: ", "token = ", user.token,
+                //     " :: ", "response = ", response,
+                //     " :: ", "response.data.data = ", response.data.data
+                // );
                 // const data = response.data;
 
                 if ( response.data ) {
@@ -313,33 +297,37 @@ const ChatContent = () => {
     }, [ selectedChat, user ] );
 
     // console.log( "ChatContent :: messages array = ", messages, " :: ", "selectedChat = ", selectedChat );
-
     console.log( "-----------", "notifications: ", notifications );
 
     return (
         <>
             { selectedChat ? (
                 <>
-                    <Text
-                        fontSize={ {
-                            base: '28px',
-                            md: '30px',
-                        } }
-                        pb={ 3 }
-                        px={ 2 }
+                    <Box
+                        p={ `0.125em` }
+                        h={ `${ 32 }px` }
+                        maxH={ `${ 32 }px` }
+                        mb={ '3px' }
+                        py={ 1 }
                         w={ '100%' }
-                        fontFamily={ 'Work sans' }
                         display={ 'flex' }
                         justifyContent={ {
                             base: 'space-between',
                         } }
                         alignItems={ 'center' }
+                        bg={
+                            useColorModeValue(
+                                'blackAlpha.900',
+                                'blackAlpha.100'
+                            )
+                        }
                     >
                         <IconButton
                             display={ {
                                 base: 'flex',
                                 md: 'none',
                             } }
+                            size={ "sm" }
                             icon={ <ArrowBackIcon /> }
                             onClick={ () =>
                                 setSelectedChat( '' )
@@ -350,25 +338,82 @@ const ChatContent = () => {
                             // If group chat, show chat name. 
                             // If not, show recipient name. 
                             selectedChat.isGroupChat ? (
-                                <>
-                                    { selectedChat.chatName.toUpperCase() }
+                                <Box
+                                    px={ 2 }
+                                    display={ 'flex' }
+                                    w={ '100%' }
+                                    justifyContent={ {
+                                        base: 'space-between',
+                                    } }
+                                    alignItems={ 'center' }
+                                    fontSize={ {
+                                        base: '20px',
+                                        md: '24px',
+                                    } }
+                                    flexDir={ 'row' }
+                                    flexWrap={ 'nowrap' }
+                                >
+                                    {
+                                        // Chat Name
+                                    }
+                                    <Box
+                                        display={ 'flex' }
+                                        flexDir={ 'row' }
+                                        alignItems={ 'center' }
+                                        gap={ 2 }
+                                    >
+
+                                        { util.val.isValidArray( selectedChat.users, true ) && (
+                                            <AvatarGroup size={ 'sm' } max={ 2 } p={ 1 }>
+                                                {
+                                                    // Map out each avatar icon. 
+                                                    selectedChat.users.map( ( u ) => {
+                                                        return (
+                                                            <UserAvatar userData={ u } />
+                                                        );
+                                                    } )
+                                                }
+                                            </AvatarGroup>
+                                        ) }
+
+                                        <Text
+                                            fontSize={ 'md' }
+                                            as={ 'b' }
+                                            p={ 0 }
+                                            m={ 0 }
+                                        >
+                                            {
+                                                selectedChat?.chatName
+                                            }
+                                        </Text>
+                                    </Box>
+
                                     <UpdateChatModal />
-                                </>
+                                </Box>
                             ) : (
-                                <>
-                                    { getSender( user, selectedChat.users ) }
-                                    <ProfileModal user={ getSenderData( user, selectedChat.users ) } />
-                                </>
+                                <Box>
+                                    {
+                                        getSender( user, selectedChat.users )
+                                    }
+                                    <UserAvatar
+                                        userData={
+                                            getSenderData(
+                                                user,
+                                                selectedChat.users
+                                            )
+                                        }
+                                    />
+                                </Box>
                             )
                         }
-                    </Text>
+                    </Box>
 
 
                     <Box
                         display="flex"
                         flexDir="column"
                         justifyContent="flex-end"
-                        p={ 3 }
+                        p={ 1 }
                         bg={ useColorModeValue( 'gray.200', 'gray.dark' ) }
                         w="100%"
                         h="100%"
@@ -392,6 +437,7 @@ const ChatContent = () => {
                         }
 
                         <FormControl
+                            size={ 'xs' }
                             onKeyDown={ sendMessage }
                             mt={ 3 }
                             isRequired
@@ -404,11 +450,20 @@ const ChatContent = () => {
                                 </ChatTypingIndicator>
                             ) : ( <></> ) }
                             <Input
-                                variant='filled'
+                                size={ 'xs' }
+                                borderRadius={ 'full' }
+                                variant='outline'
                                 bg={ useColorModeValue( 'white', 'gray.dark' ) }
                                 placeholder="Begin typing"
+                                fontSize={ '12px' }
                                 value={ newMessage }
                                 onChange={ typingHandler }
+                                outline={ '0.1em' }
+                                _focus={
+                                    {
+                                        outlineColor: useColorModeValue( 'gray.100', 'gray.900' ),
+                                    }
+                                }
                             />
                         </FormControl>
                     </Box>
@@ -420,7 +475,6 @@ const ChatContent = () => {
                     justifyContent={ 'center' }
                     h={ '100%' }>
                     <Text
-                        fontSize={ 'xl' }
                         pb={ 3 }
                         fontFamily='Work sans'>
                         Click on a user to start chatting

@@ -6,6 +6,8 @@ import {
     InputGroup,
     InputRightElement,
     VStack,
+    useColorModeValue,
+    useColorMode,
     useToast,
 } from '@chakra-ui/react';
 import { useState } from 'preact/hooks';
@@ -16,29 +18,19 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
     const toast = useToast();
     const navigate = useNavigate();
-    const [
-        showPassword,
-        setShowPassword,
-    ] = useState( false );
-    const [
-        showConfirmPassword,
-        setShowConfirmPassword,
-    ] = useState( false );
+    const { colorMode, toggleColorMode } = useColorMode();
+    const [ showPassword, setShowPassword ] = useState( false );
+    const [ showConfirmPassword, setShowConfirmPassword ] = useState( false );
     const [ name, setName ] = useState();
-    const [ email, setEmail ] =
-        useState();
-    const [ password, setPassword ] =
-        useState();
-    const [
-        confirmPassword,
-        setConfirmPassword,
-    ] = useState();
+    const [ email, setEmail ] = useState();
+    const [ password, setPassword ] = useState();
+    const [ confirmPassword, setConfirmPassword ] = useState();
     const [ loading, setLoading ] = useState( false );
 
     const submitHandler = async () => {
         // Submit details to server. 
         setLoading( true );
-        if ( !email || !password ) {
+        if ( !name || !password ) {
             toast( {
                 title: "Please fill in all fields",
                 status: "warning",
@@ -59,7 +51,7 @@ const Login = () => {
 
             const response = await axios.post(
                 "/api/user/login",
-                { email, password },
+                { name, password },
                 config
             );
 
@@ -100,32 +92,37 @@ const Login = () => {
     return (
         <VStack
             spacing='5px'
-            color='black'>
+            color='black'
+            bg={ useColorModeValue( 'gray.200', 'gray.800' ) }
+        >
             <FormControl
                 id={ 'name' }
                 isRequired>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Account Name</FormLabel>
                 <Input
-                    placeholder='Enter your name'
-                    value={name}
+                    placeholder='Enter your username'
+                    value={ name }
                     onChange={ ( e ) => {
                         setName( e.target.value );
                     } }
+                    bg={ useColorModeValue( 'gray.200', 'gray.dark' ) }
                 />
             </FormControl>
 
+            { /*
             <FormControl
                 id={ 'email' }
                 isRequired>
                 <FormLabel>Email</FormLabel>
                 <Input
                     placeholder='Enter your email'
-                    value={email}
+                    value={ email }
                     onChange={ ( e ) => {
                         setEmail( e.target.value );
                     } }
                 />
             </FormControl>
+            */ }
 
             <FormControl
                 id={ 'password' }
@@ -135,7 +132,7 @@ const Login = () => {
                     <Input
                         type={ showPassword ? `text` : `password` }
                         placeholder='Enter your password'
-                        value={password}
+                        value={ password }
                         onChange={ ( e ) => {
                             setPassword(
                                 e.target.value
@@ -146,9 +143,9 @@ const Login = () => {
                     <InputRightElement
                         width={ `4.5rem` }>
                         <Button
-                            bgColor={ showPassword ? `grey` : `white` }
-                            h='1.75rem'
-                            size='sm'
+                            bgColor={ showPassword ? `grey` : `grey` }
+                            h={ '100%' }
+                            size={ 'sm' }
                             onClick={ () => {
                                 setShowPassword(
                                     !showPassword
