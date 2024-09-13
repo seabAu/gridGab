@@ -16,6 +16,7 @@ import {
     PopoverCloseButton,
     PopoverAnchor,
     AvatarBadge,
+    useColorModeValue,
 } from '@chakra-ui/react';
 import * as util from 'akashatools';
 import ProfileInfo from './ProfileInfo';
@@ -51,6 +52,10 @@ const UserAvatar = ( props ) => {
                 src={ userData.avatar }
                 border={ '2px' }
                 borderColor={ 'white' }
+                bg={ useColorModeValue(
+                    'gray.light',
+                    'gray.dark'
+                ) }
             >
                 {
                     // showOnline && (

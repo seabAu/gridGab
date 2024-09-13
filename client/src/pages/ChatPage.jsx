@@ -25,9 +25,9 @@ const ChatPage = () => {
         fetchUser,
         setFetchUser,
         refresh,
-        setRefresh
+        setRefresh,
+        toast
     } = ChatState();
-    const toast = useToast();
 
     // const fetchChats = async () => {
     //     const {data} = await axios.get( '/api/chat' );
@@ -58,9 +58,6 @@ const ChatPage = () => {
                     title: "Success",
                     description: response.data.message,
                     status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                    position: "bottom-left",
                 } );
             }
         } catch ( error ) {
@@ -74,9 +71,6 @@ const ChatPage = () => {
                 title: "An error occurred",
                 description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
         }
     }
@@ -98,22 +92,29 @@ const ChatPage = () => {
     return (
 
         <div
+            // Container for whole chat page. 
+            className='chat-container'
             style={ { width: '100%' } }
             bg={ useColorModeValue(
-                'white',
+                'gray.light',
                 'gray.dark'
-            ) }>
-            { user && <Content /> }
+            ) }
 
-            <Box
-                display='flex'
-                justifyContent='space-between'
-                w='100%'
-                h='91.5vh'
-                p='4px'>
-                { user && <ChatList refresh={ refresh } /> }
-                { user && <ChatContainer refresh={ refresh } setRefresh={ setRefresh } /> }
-            </Box>
+        >
+            <>
+                { user && <Content /> }
+                <Box
+                    display={ 'flex' }
+                    justifyContent={ 'space-between' }
+                    w={ '100%' }
+                    h={ `${ 91.5 }vh` }
+                    p={ '4px' }
+                >
+                    { user && <ChatList refresh={ refresh } /> }
+                    { user && <ChatContainer refresh={ refresh } setRefresh={ setRefresh } /> }
+                </Box>
+            </>
+
         </div>
     );
 };

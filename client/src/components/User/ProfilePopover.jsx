@@ -39,9 +39,21 @@ const ProfilePopover = ( props ) => {
                 </PopoverTrigger>
                 <PopoverContent
                     color='white'
-                    bg={ useColorModeValue( 'gray.light', 'gray.dark' ) }
+                    bg={
+                        useColorModeValue(
+                            'gray.100',
+                            'gray.dark'
+                        )
+                    }
                 >
-                    <PopoverCloseButton bg='purple.500' />
+                    <PopoverCloseButton
+                        bg={
+                            useColorModeValue(
+                                'gray.400',
+                                'gray.700'
+                            )
+                        }
+                    />
                     <PopoverBody>
                         <ProfileInfo userData={ userData } />
                     </PopoverBody>

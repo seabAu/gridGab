@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box } from '@chakra-ui/react'
+import { Box, useColorModeValue } from '@chakra-ui/react'
 import { ChatState } from '../../context/ChatProvider';
 import ChatContent from './ChatContent';
 
@@ -8,16 +8,21 @@ const ChatContainer = ( { refresh, setRefresh } ) => {
     return (
 
         <Box
-            className="chat-content-panel"
+            className="chat-container"
             display={ { base: selectedChat ? "flex" : "none", md: "flex" } }
             alignItems="center"
             flexDir="column"
-            p={ 1 }
             w={ { base: "100%", md: "68%" } }
             borderRadius="sm"
             borderWidth="1px"
+            borderColor={
+                useColorModeValue(
+                    'blackAlpha.100',
+                    'whiteAlpha.100'
+                )
+            }
         >
-            <ChatContent />
+            <ChatContent headerHeight={`48px`} />
         </Box>
     )
 }

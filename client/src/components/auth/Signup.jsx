@@ -9,17 +9,24 @@ import {
     useColorModeValue,
     useColorMode,
     useToast,
+    Avatar,
+    Box,
 } from '@chakra-ui/react';
 import { useState } from 'preact/hooks';
 import React from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ChatState } from '../../context/ChatProvider';
 
 const Signup = () => {
-    const toast = useToast();
     const navigate = useNavigate();
     const { colorMode, toggleColorMode } = useColorMode();
 
+    const {
+        user,
+        setUser, 
+    } = ChatState();
+    
     const [ showPassword, setShowPassword ] = useState( false );
     const [ showConfirmPassword, setShowConfirmPassword ] = useState( false );
     const [ name, setName ] = useState( '' );
@@ -30,6 +37,11 @@ const Signup = () => {
     const [ avatar, setAvatar ] = useState();
     const [ avatarLoading, setAvatarLoading ] = useState( false );
 
+    
+    const {
+        toast,
+    } = ChatState();
+
     const submitHandler = async () => {
         // Submit details to server. 
         setAvatarLoading( true );
@@ -39,9 +51,6 @@ const Signup = () => {
             toast( {
                 title: "Please fill in all fields.",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setAvatarLoading( false );
             return;
@@ -52,9 +61,6 @@ const Signup = () => {
             toast( {
                 title: "The passwords do not match",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setAvatarLoading( false );
             return;
@@ -67,7 +73,7 @@ const Signup = () => {
                 },
             };
             // if ( !displayName ) { displayName = ""; } // Make sure it's not null at very least. 
-            
+
             const response = await axios.post(
                 "/api/user/",
                 {
@@ -93,6 +99,7 @@ const Signup = () => {
             } );
             localStorage.setItem( "userInfo", JSON.stringify( user ) );
             setAvatarLoading( false );
+            setUser( user );
             navigate( "/chat" );
         } catch ( error ) {
             toast( {
@@ -115,9 +122,6 @@ const Signup = () => {
             toast( {
                 title: "Please select an image.",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             return;
         }
@@ -145,9 +149,6 @@ const Signup = () => {
             toast( {
                 title: "Please Select an Image!",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setAvatarLoading( false );
             return;
@@ -241,7 +242,7 @@ const Signup = () => {
                         <Button
                             bgColor={ showPassword ? `grey` : `grey` }
                             h={ '100%' }
-                            size={ 'sm' }
+                            size={ 'xs' }
                             onClick={ () => {
                                 setShowPassword(
                                     !showPassword
@@ -278,7 +279,7 @@ const Signup = () => {
                         <Button
                             bgColor={ showConfirmPassword ? `grey` : `grey` }
                             h={ '100%' }
-                            size={ 'sm' }
+                            size={ 'xs' }
                             onClick={ () => {
                                 setShowConfirmPassword(
                                     !showConfirmPassword
@@ -293,14 +294,28 @@ const Signup = () => {
             </FormControl>
 
 
-            <FormControl id="avatar">
+            <FormControl
+                id="avatar"
+                display={ 'flex' }
+                flexDir={ 'column' }
+            >
                 <FormLabel>Upload your Avatar</FormLabel>
-                <Input
-                    type="file"
-                    p={ 1.5 }
-                    accept="image/*"
-                    onChange={ ( e ) => handleSelectAvatar( e.target.files[ 0 ] ) }
-                />
+
+                <InputGroup
+                    gap={2}
+                >
+
+                    {
+                        avatar ? <Avatar src={ avatar } /> : <></>
+                    }
+
+                    <Input
+                        type="file"
+                        p={ 1.5 }
+                        accept="image/*"
+                        onChange={ ( e ) => handleSelectAvatar( e.target.files[ 0 ] ) }
+                    />
+                </InputGroup>
             </FormControl>
 
 

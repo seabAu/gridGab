@@ -10,7 +10,12 @@ import CreateChatModal from './CreateChatModal';
 import UserListItem from '../User/UserListItem';
 import RoomList from './RoomList';
 
-const ChatList = () => {
+const ChatList = ( props ) => {
+    const {
+        headerHeight = `${ 48 }px`,
+        debug
+    } = props;
+
     const {
         user,
         selectedChat,
@@ -18,10 +23,11 @@ const ChatList = () => {
         chats,
         setChats,
         fetchChats,
-        setFetchChats
+        setFetchChats,
+        toast
     } = ChatState();
     const [ loggedUser, setLoggedUser ] = useState();
-    const toast = useToast();
+    // const toast = useToast();
     const [ rooms, setRooms ] = useState( [] );
 
     const getChats = async () => {
@@ -44,14 +50,13 @@ const ChatList = () => {
             if ( response.data ) {
                 let data = response.data.data;
                 setChats( data );
+                /*
                 toast( {
                     title: "Success",
                     description: response.data.message,
                     status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                    position: "bottom-left",
                 } );
+                */
             }
         } catch ( error ) {
             let msg = error.message;
@@ -59,14 +64,11 @@ const ChatList = () => {
                 // If alternate error message given
                 msg = error.response.data.message;
             }
-            console.log( "getChats :: msg = ", msg );
+            
             toast( {
                 title: "Error",
                 description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom-left",
             } );
         } finally {
             setFetchChats( false );
@@ -91,15 +93,13 @@ const ChatList = () => {
             if ( response.data ) {
                 let data = response.data.data;
                 setRooms( data );
-                console.log( "getPublicChats :: data = ", data );
+                /*
                 toast( {
                     title: "Success",
                     description: response.data.message,
                     status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                    position: "bottom-left",
                 } );
+                */
             }
         } catch ( error ) {
             let msg = error.message;
@@ -112,9 +112,6 @@ const ChatList = () => {
                 title: "Error",
                 description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom-left",
             } );
         }
     };
@@ -125,47 +122,62 @@ const ChatList = () => {
     }, [] );
 
     useEffect( () => {
-        setLoggedUser( JSON.parse( localStorage.getItem( "userInfo" ) ) );
+        console.log( "ChatList :: change in user or fetchChats detected. Saving new user data to local storage." );
+        setLoggedUser(
+            JSON.parse(
+                localStorage.getItem( "userInfo" )
+            )
+        );
         if ( fetchChats || chats.length === 0 ) getChats();
-        // eslint-disable-next-line
     }, [ user, fetchChats ] );
 
     return (
-
         <Box
             className="chat-list-panel"
             display={ { base: selectedChat ? "none" : "flex", md: "flex" } }
             flexDir="column"
             alignItems="center"
-            p={ '0.125em' }
             w={ { base: "100%", md: "31%" } }
             overflowY="hidden"
             borderRadius="sm"
             borderWidth="1px"
+            borderColor={
+                useColorModeValue(
+                    'blackAlpha.100',
+                    'whiteAlpha.100'
+                )
+            }
         >
             <Box
                 className="chat-list-panel-header"
-                display="flex"
-                w="100%"
-                justifyContent={ 'space-between' }
-                alignItems="center"
                 overflowY="hidden"
-                borderRadius="sm"
                 p={ `0.125em` }
-                h={ `${ 32 }px` }
-                maxH={ `${ 32 }px` }
+                h={ `${ headerHeight }` }
+                maxH={ `${ headerHeight }` }
                 // bg={ useColorModeValue( 'white', 'gray.dark' ) }
                 bg={
                     useColorModeValue(
-                        'blackAlpha.900',
-                        'blackAlpha.100'
+                        'blackAlpha.100',
+                        'whiteAlpha.100'
                     )
                 }
+                mb={ '2px' }
+                px={ `0.125em` }
+                w={ '100%' }
+                display={ 'flex' }
+                justifyContent={ {
+                    base: 'space-between',
+                } }
+                alignItems={ 'center' }
+                borderRadius="sm"
+            // bg={ useColorModeValue( 'white', 'gray.dark' ) }
             >
                 <Text
                     className="chat-list-panel-header-title"
                     // fontSize={ { base: "18px", md: "14px", lg: "10px" } }
                     fontSize={ [ 'sm', 'md', 'lg', 'xl' ] }
+                    P={ 0 }
+                    m={ 0 }
                 >
                     Chats
                 </Text>
@@ -181,14 +193,14 @@ const ChatList = () => {
                 }
                 <Button
                     display="flex"
-                    size={ 'sm' }
-                    maxH={ `${ 28 }px` }
+                    // fontSize={ { base: "12px", md: "10px", lg: "12px" } }
+                    // rightIcon={ <AddIcon /> }
+                    size={ 'xs' }
+                    maxW={ `${ 20 }px` }
                     p={ 1 }
-                // fontSize={ { base: "12px", md: "10px", lg: "12px" } }
-                // rightIcon={ <AddIcon /> }
                 >
                     <CreateChatModal>
-                        <AddIcon />
+                        <AddIcon fontSize={ 'xs' } p={ 0 } />
                     </CreateChatModal>
                 </Button>
             </Box>
@@ -197,13 +209,13 @@ const ChatList = () => {
 
             <Box
                 className="chat-list-panel-list"
-                d="flex"
-                justifyContent={ 'flex-end' }
-                alignContent={ 'flex-start' }
+                display="flex"
+                justifyContent={ `stretch` }
+                alignContent={ 'stretch' }
                 w="100%"
                 h="100%"
                 overflowY={ 'auto' }
-                bg={ useColorModeValue( 'white', 'gray.dark' ) }
+                bg={ useColorModeValue( 'gray.300', 'gray.dark' ) }
             >
                 {
                     chats ? (
@@ -211,7 +223,7 @@ const ChatList = () => {
                             flexDir="column"
                             gap={ '0px' }
                             px={ '0.0125em' }
-
+                            flexGrow={ 1 }
                         >
                             {
                                 chats.map( ( chat, index ) => {
@@ -237,12 +249,12 @@ const ChatList = () => {
                                                 useColorModeValue(
                                                     selectedChat === chat
                                                         ?
-                                                        "#2a5654"
+                                                        "#ffffff"
                                                         :
                                                         "#E8E8E8",
                                                     selectedChat === chat
                                                         ?
-                                                        'blackAlpha.200'
+                                                        'blackAlpha.00'
                                                         :
                                                         'blackAlpha.100'
                                                 )
@@ -268,40 +280,44 @@ const ChatList = () => {
                                                 alignItems={ 'flex-start' }
                                             >
 
-                                                <Text
-                                                    letterSpacing={ 1.05 }
+                                                <Box
                                                     px={ '0.01em' }
-                                                    // color={ useColorModeValue( 'violet.900', 'violet.100' ) }
-                                                    color={ useColorModeValue( 'gray.900', 'gray.100' ) }
-                                                    // fontSize={ [ 'sm', 'md', 'lg', 'xl' ] }
-                                                    fontSize={ {
-                                                        base: `${ 12 }px`,
-                                                        sm: `${ 12 }px`,
-                                                        md: `${ 12 }px`,
-                                                        lg: `${ 14 }px`
-                                                    } }
+                                                    display={ 'flex' }
+                                                    flexDir={ 'row' }
                                                 >
-                                                    {
-                                                        !chat.isGroupChat
-                                                            ?
-                                                            (
-                                                                getSender( loggedUser, chat.users )
-                                                            )
-                                                            :
-                                                            (
+                                                    <Text
+                                                        letterSpacing={ 1.05 }
+                                                        px={ '0.01em' }
+                                                        color={ useColorModeValue( 'gray.900', 'gray.100' ) }
+                                                        // fontSize={ [ 'sm', 'md', 'lg', 'xl' ] }
+                                                        fontSize={ {
+                                                            base: `${ 12 }px`,
+                                                            sm: `${ 12 }px`,
+                                                            md: `${ 12 }px`,
+                                                            lg: `${ 14 }px`
+                                                        } }
+                                                    >
+                                                        {
+                                                            !chat.isGroupChat
+                                                                ?
+                                                                (
+                                                                    // getSender( loggedUser, chat.users )
+                                                                    getSender( user, chat.users )
+                                                                )
+                                                                :
+                                                                (
+                                                                    chat.chatName
+                                                                        ?
+                                                                        // Has a chat name, show it instead of user list. 
+                                                                        ( chat.chatName )
+                                                                        :
+                                                                        // Has no chat name set, use user list. 
+                                                                        ( getChatUsers( chat.users ).join( ', ' ) )
+                                                                )
+                                                        }
+                                                    </Text>
 
-                                                                chat.chatName
-                                                                    ?
-                                                                    // Has a chat name, show it instead of user list. 
-                                                                    ( chat.chatName )
-                                                                    :
-                                                                    // Has no chat name set, use user list. 
-                                                                    ( getChatUsers( chat.users ).join( ', ' ) )
-                                                            )
-
-                                                    }
-                                                </Text>
-
+                                                </Box>
                                             </Box>
 
                                             {

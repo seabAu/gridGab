@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "A basic chat app using MERN and Socket.IO. Has account creation and management, live messaging, 1-on-1 chats, group chats, some personalization features, and notifications.",
     "type": "module",
-    "main": "server.js",
+    "main": "server/server.js",
     "scripts": {
         "server": "nodemon server/server.js",
         "client": "npm start --prefix client",

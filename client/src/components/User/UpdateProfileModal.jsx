@@ -40,7 +40,6 @@ import UserListItem from './UserListItem';
 import { ChatState } from '../../context/ChatProvider';
 import { uploadImage } from '../../utilities/user';
 import axios from 'axios';
-import ProfileModal from './ProfileModal';
 
 const UpdateProfileModal = ( props ) => {
     const {
@@ -50,7 +49,6 @@ const UpdateProfileModal = ( props ) => {
         initialTab = 0,
         debug,
     } = props;
-    
     const {
         user,
         setUser,
@@ -95,15 +93,11 @@ const UpdateProfileModal = ( props ) => {
         }
     }, [ userData ] );
 
-    useEffect( () => {
-        console.log( "Detected a change to profileChanged: [", profileChanged, "]" );
-    }, [ profileChanged ] );
-
-    useEffect( () => {
-        // Catch any changes to the state version of the user data. 
-        console.log( "Detected a change to user: [", user, "]" );
-        setUserData( user );
-    }, [ user ] );
+    // useEffect( () => {
+    //     // Catch any changes to the state version of the user data. 
+    //     console.log( "Detected a change to user: [", user, "]" );
+    //     setUserData( user );
+    // }, [ user ] );
 
     const handleCancel = () => {
         setUserData( user );
@@ -210,37 +204,6 @@ const UpdateProfileModal = ( props ) => {
         }
     }
 
-    const handleAvatarChange2 = ( file ) => {
-        if ( file ) {
-            // File is not null.
-            // Set avatar temp to file just in case. 
-            setAvatarTemp( file );
-
-            // Await the upload utility. 
-            let res;
-            try {
-                res = uploadImage( file );
-                console.log( "handleAvatarChange", " :: ", "res = ", res );
-                if ( res ) {
-                    if ( res.data ) {
-                        let url = res.data;
-                        handleChange( url, 'avatar' );
-                    }
-                }
-            } catch ( error ) {
-                toast( {
-                    title: "Error: " + error.message,
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                    position: "bottom",
-                } );
-            } finally {
-                setAvatarTemp( null );
-            }
-        }
-    }
-
     const handleChange = ( val, value_id ) => {
         // const val = e.target.value;
 
@@ -253,7 +216,7 @@ const UpdateProfileModal = ( props ) => {
 
                 setUserData( updateUserData );
                 setProfileChanged( true );
-                console.log( "HandleChange :: updateUserData is: ", updateUserData, " :: ", "profileChanged: ", profileChanged );
+                // console.log( "HandleChange :: updateUserData is: ", updateUserData, " :: ", "profileChanged: ", profileChanged );
             }
             else {
                 // Field not in user. Add it anyways, and let the 
@@ -282,13 +245,14 @@ const UpdateProfileModal = ( props ) => {
                 finalFocusRef={ finalRef }
             >
                 <ModalOverlay
-                    // bg='blackAlpha.300'
-                    // backdropFilter='blur(10px) hue-rotate(90deg)'
-                    // backdropFilter='auto'
-                    // backdropInvert='80%'
-                    // backdropBlur='2px'
-                    onClick={ onClose }
-                    onBlur={ onClose }
+                    closeOnOverlayClick={ false }
+                // bg='blackAlpha.300'
+                // backdropFilter='blur(10px) hue-rotate(90deg)'
+                // backdropFilter='auto'
+                // backdropInvert='80%'
+                // backdropBlur='2px'
+                // onClick={ onClose }
+                // onBlur={ onClose }
                 />
                 <ModalContent
                     h={ `${ 90 }%` }
@@ -640,7 +604,8 @@ const UpdateProfileModal = ( props ) => {
                                                             <Button
                                                                 colorScheme="blue"
                                                                 size={ 'xs' }
-                                                                onClick={ () => {
+                                                                onClick={ ( e ) => {
+                                                                    e.preventDefault();
                                                                     handleCancel();
                                                                 } }
                                                             >
@@ -650,7 +615,8 @@ const UpdateProfileModal = ( props ) => {
                                                                 variant="solid"
                                                                 colorScheme="red"
                                                                 size={ 'xs' }
-                                                                onClick={ () => {
+                                                                onClick={ ( e ) => {
+                                                                    e.preventDefault();
                                                                     handleSubmit();
                                                                 } }
                                                             >
@@ -661,14 +627,14 @@ const UpdateProfileModal = ( props ) => {
                                                 }
 
                                                 {
-                                                    // Debug stuff. Remove later. 
-                                                    profileChanged && userData && (
-                                                        <Box>
-                                                            {
-                                                                JSON.stringify( userData, null, 2 )
-                                                            }
-                                                        </Box>
-                                                    )
+                                                    // // Debug stuff. Remove later. 
+                                                    // profileChanged && userData && (
+                                                    //     <Box>
+                                                    //         {
+                                                    //             JSON.stringify( userData, null, 2 )
+                                                    //         }
+                                                    //     </Box>
+                                                    // )
                                                 }
                                             </VStack>
                                         }
@@ -711,7 +677,7 @@ const UpdateProfileModal = ( props ) => {
                         ) }
                     >
                         <Button
-                            onClick={ onClose }
+                            onClick={ () => { onClose(); } }
                             size={ 'xs' }
                         >
                             Close
@@ -724,3 +690,36 @@ const UpdateProfileModal = ( props ) => {
 }
 
 export default UpdateProfileModal;
+
+/*
+    const handleAvatarChange2 = ( file ) => {
+        if ( file ) {
+            // File is not null.
+            // Set avatar temp to file just in case. 
+            setAvatarTemp( file );
+
+            // Await the upload utility. 
+            let res;
+            try {
+                res = uploadImage( file );
+                console.log( "handleAvatarChange", " :: ", "res = ", res );
+                if ( res ) {
+                    if ( res.data ) {
+                        let url = res.data;
+                        handleChange( url, 'avatar' );
+                    }
+                }
+            } catch ( error ) {
+                toast( {
+                    title: "Error: " + error.message,
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                    position: "bottom",
+                } );
+            } finally {
+                setAvatarTemp( null );
+            }
+        }
+    }
+*/

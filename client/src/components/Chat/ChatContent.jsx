@@ -11,8 +11,6 @@ import {
     useColorMode,
     useColorModeValue,
     useToast,
-    Wrap,
-    WrapItem,
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import { getSender, getSenderData } from '../../config/ChatLogic';
@@ -22,7 +20,6 @@ import { useEffect, useState } from 'preact/hooks';
 import axios from 'axios';
 import ChatMessages from './ChatMessages';
 import * as util from 'akashatools';
-
 
 // Socket.io import and setup.
 import { io } from 'socket.io-client';
@@ -35,8 +32,14 @@ let socket;
 let selectedChatCompare;
 
 
-const ChatContent = () => {
-    // Shows the messages of a given chat message log. IE, the content of a chat. 
+const ChatContent = ( props ) => {
+    // Shows the messages of a given chat message log. IE, the content of a chat.
+
+    const {
+        headerHeight = `${ 48 }`,
+        debug
+    } = props;
+
     const {
         // debug, 
         // setDebug, 
@@ -47,8 +50,9 @@ const ChatContent = () => {
         setFetchChats, // "setFetchAgain"
         notifications,
         setNotifications,
+        toast,
     } = ChatState();
-    const toast = useToast();
+    
     const { colorMode, toggleColorMode } = useColorMode();
 
     const [ messages, setMessages ] = useState( [] );
@@ -99,6 +103,8 @@ const ChatContent = () => {
     }, [] );
 
     useEffect( () => {
+        // Handles showing/hiding the typing indicator.
+        // The typing indicator tracks how many people are currently typing. 
         if ( typingUsers.length ) {
             setTypingIndicator( true );
         }
@@ -167,9 +173,6 @@ const ChatContent = () => {
                 title: "Error",
                 description: "Failed to load messages. Please refresh the page: " + error.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom-left",
             } );
         }
 
@@ -180,11 +183,8 @@ const ChatContent = () => {
             // Submitted via enter key
 
             socketSendTyping( false );
-
             let response;
             try {
-                // setLoading( true );
-
                 const config = {
                     headers: {
                         Authorization: `Bearer ${ user.token }`,
@@ -195,50 +195,39 @@ const ChatContent = () => {
                 let msg = newMessage;
                 setNewMessage( "" );
                 response = await axios.post(
-                    `/api/message`,
-                    {
-                        "content": msg,
-                        "chatId": selectedChat._id,
-                    },
+                    `/api/message`, {
+                    "content": msg,
+                    "chatId": selectedChat._id,
+                },
                     config
                 );
 
-                // console.log(
-                //     "ChatContent",
-                //     " :: ", "sendMessage",
-                //     " :: ", "token = ", user.token,
-                //     " :: ", "response = ", response,
-                //     " :: ", "response.data.data = ", response.data.data
-                // );
-                // const data = response.data;
-
                 if ( response.data ) {
-
                     let data = response.data.data;
                     setMessages( [ ...messages, data ] );
 
+                    /*
                     toast( {
                         title: "Successfully sent message.",
                         description: response.data.message,
                         status: "success",
-                        duration: 5000,
-                        isClosable: true,
-                        position: "bottom",
                     } );
-
+                    */
+                    
                     // Emit message to socket.io server.
                     socket.emit( 'chat.message.new', data );
                 }
 
             } catch ( error ) {
-
+                let msg = error.message;
+                if ( error.response?.data?.message ) {
+                    // If alternate error message given
+                    msg = error.response.data.message;
+                }
                 toast( {
                     title: "Error",
-                    description: error.message,
+                    description: msg,
                     status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                    position: "bottom-left",
                 } );
             }
         }
@@ -297,28 +286,30 @@ const ChatContent = () => {
     }, [ selectedChat, user ] );
 
     // console.log( "ChatContent :: messages array = ", messages, " :: ", "selectedChat = ", selectedChat );
-    console.log( "-----------", "notifications: ", notifications );
+    /// console.log( "-----------", "notifications: ", notifications );
 
     return (
         <>
             { selectedChat ? (
                 <>
                     <Box
-                        p={ `0.125em` }
-                        h={ `${ 32 }px` }
-                        maxH={ `${ 32 }px` }
-                        mb={ '3px' }
-                        py={ 1 }
+                        className='chat-content-header'
+                        h={ `${ headerHeight }` }
+                        maxH={ `${ headerHeight }` }
+                        mb={ '2px' }
+                        px={ `0.125em` }
                         w={ '100%' }
                         display={ 'flex' }
                         justifyContent={ {
                             base: 'space-between',
                         } }
                         alignItems={ 'center' }
+                        borderRadius="sm"
+                        // bg={ useColorModeValue( 'white', 'gray.dark' ) }
                         bg={
                             useColorModeValue(
-                                'blackAlpha.900',
-                                'blackAlpha.100'
+                                'blackAlpha.100',
+                                'whiteAlpha.100'
                             )
                         }
                     >
@@ -334,80 +325,91 @@ const ChatContent = () => {
                             }
                         />
 
-                        {
-                            // If group chat, show chat name. 
-                            // If not, show recipient name. 
-                            selectedChat.isGroupChat ? (
-                                <Box
-                                    px={ 2 }
-                                    display={ 'flex' }
-                                    w={ '100%' }
-                                    justifyContent={ {
-                                        base: 'space-between',
-                                    } }
-                                    alignItems={ 'center' }
-                                    fontSize={ {
-                                        base: '20px',
-                                        md: '24px',
-                                    } }
-                                    flexDir={ 'row' }
-                                    flexWrap={ 'nowrap' }
-                                >
-                                    {
-                                        // Chat Name
-                                    }
-                                    <Box
-                                        display={ 'flex' }
-                                        flexDir={ 'row' }
-                                        alignItems={ 'center' }
-                                        gap={ 2 }
-                                    >
-
-                                        { util.val.isValidArray( selectedChat.users, true ) && (
-                                            <AvatarGroup size={ 'sm' } max={ 2 } p={ 1 }>
-                                                {
-                                                    // Map out each avatar icon. 
-                                                    selectedChat.users.map( ( u ) => {
-                                                        return (
-                                                            <UserAvatar userData={ u } />
-                                                        );
-                                                    } )
-                                                }
-                                            </AvatarGroup>
-                                        ) }
-
-                                        <Text
-                                            fontSize={ 'md' }
-                                            as={ 'b' }
-                                            p={ 0 }
-                                            m={ 0 }
+                        <Box
+                            px={ 1 }
+                            display={ 'flex' }
+                            w={ '100%' }
+                            h={ 'auto' }
+                            justifyContent={ {
+                                base: 'space-between',
+                            } }
+                            alignItems={ 'center' }
+                            fontSize={ {
+                                base: '20px',
+                                md: '24px',
+                            } }
+                            flexDir={ 'row' }
+                            flexWrap={ 'nowrap' }
+                        >
+                            {
+                                selectedChat.isGroupChat
+                                    ?
+                                    (
+                                        // Group chat
+                                        <Box
+                                            display={ 'flex' }
+                                            flexDir={ 'row' }
+                                            alignItems={ 'center' }
+                                            gap={ 2 }
                                         >
-                                            {
-                                                selectedChat?.chatName
-                                            }
-                                        </Text>
-                                    </Box>
+                                            { util.val.isValidArray( selectedChat.users, true ) && (
+                                                <AvatarGroup size={ 'sm' } max={ 2 } p={ 1 }>
+                                                    {
+                                                        // Map out each avatar icon. 
+                                                        selectedChat.users.map( ( u ) => {
+                                                            return (
+                                                                <UserAvatar userData={ u } />
+                                                            );
+                                                        } )
+                                                    }
+                                                </AvatarGroup>
+                                            ) }
+                                            <Text
+                                                fontSize={ 'md' }
+                                                as={ 'b' }
+                                                p={ 0 }
+                                                m={ 0 }
+                                            >
+                                                {
+                                                    selectedChat?.chatName
+                                                }
+                                            </Text>
+                                        </Box>
+                                    )
+                                    :
+                                    (
+                                        // Private chat
 
-                                    <UpdateChatModal />
-                                </Box>
-                            ) : (
-                                <Box>
-                                    {
-                                        getSender( user, selectedChat.users )
-                                    }
-                                    <UserAvatar
-                                        userData={
-                                            getSenderData(
-                                                user,
-                                                selectedChat.users
-                                            )
-                                        }
-                                    />
-                                </Box>
-                            )
-                        }
+                                        <Box
+                                            display={ 'flex' }
+                                            flexDir={ 'row' }
+                                            alignItems={ 'center' }
+                                            gap={ 2 }
+                                        >
+                                            <UserAvatar
+                                                userData={
+                                                    getSenderData(
+                                                        user,
+                                                        selectedChat.users
+                                                    )
+                                                }
+                                            />
+                                            <Text
+                                                fontSize={ 'md' }
+                                                as={ 'b' }
+                                                p={ 0 }
+                                                m={ 0 }
+                                            >
+                                                {
+                                                    getSender( user, selectedChat.users )
+                                                }
+                                            </Text>
+                                        </Box>
+                                    )
+                            }
+                            <UpdateChatModal />
+                        </Box>
                     </Box>
-
 
                     <Box
                         display="flex"
@@ -486,3 +488,87 @@ const ChatContent = () => {
 };
 
 export default ChatContent;
+
+
+/*
+    {
+        // If group chat, show chat name. 
+        // If not, show recipient name. 
+        selectedChat.isGroupChat ? (
+            <Box
+                px={ 1 }
+                py={ 1 }
+                display={ 'flex' }
+                w={ '100%' }
+                justifyContent={ {
+                    base: 'space-between',
+                } }
+                alignItems={ 'center' }
+                fontSize={ {
+                    base: '20px',
+                    md: '24px',
+                } }
+                flexDir={ 'row' }
+                flexWrap={ 'nowrap' }
+            >
+                {
+                    // Chat Name
+                }
+                <Box
+                    display={ 'flex' }
+                    flexDir={ 'row' }
+                    alignItems={ 'center' }
+                    gap={ 2 }
+                >
+
+                    { util.val.isValidArray( selectedChat.users, true ) && (
+                        <AvatarGroup size={ 'sm' } max={ 2 } p={ 1 }>
+                            {
+                                // Map out each avatar icon. 
+                                selectedChat.users.map( ( u ) => {
+                                    return (
+                                        <UserAvatar userData={ u } />
+                                    );
+                                } )
+                            }
+                        </AvatarGroup>
+                    ) }
+
+                    <Text
+                        fontSize={ 'md' }
+                        as={ 'b' }
+                        p={ 0 }
+                        m={ 0 }
+                    >
+                        {
+                            selectedChat?.chatName
+                        }
+                    </Text>
+                </Box>
+
+                <UpdateChatModal />
+            </Box>
+        ) : (
+            <Box>
+                <UserAvatar
+                    userData={
+                        getSenderData(
+                            user,
+                            selectedChat.users
+                        )
+                    }
+                />
+                <Text
+                    fontSize={ 'md' }
+                    as={ 'b' }
+                    p={ 0 }
+                    m={ 0 }
+                >
+                    {
+                        getSender( user, selectedChat.users )
+                    }
+                </Text>
+            </Box>
+        )
+    }
+*/

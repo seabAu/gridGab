@@ -36,10 +36,10 @@ const UpdateChatModal = () => {
         selectedChat,
         setSelectedChat,
         fetchChats,
-        setFetchChats
+        setFetchChats,
+        toast
     } = ChatState();
     const { colorMode, toggleColorMode } = useColorMode();
-    const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [ search, setSearch ] = useState( "" );
@@ -65,15 +65,6 @@ const UpdateChatModal = () => {
             };
             const response = await axios.get( `/api/user?search=${ search }`, config );
 
-            console.log(
-                "UpdateChatModal",
-                " :: ", "handleSearch",
-                " :: ", "token = ", user.token,
-                " :: ", "search = ", search,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
-
             let data = response.data.data;
 
             setLoading( false );
@@ -83,8 +74,6 @@ const UpdateChatModal = () => {
                 title: "Error Occured!",
                 description: "Failed to Load the Search Results",
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom-left",
             } );
         } finally {
@@ -98,8 +87,6 @@ const UpdateChatModal = () => {
             toast( {
                 title: "User already in group!",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: "top",
             } );
             return;
@@ -110,8 +97,6 @@ const UpdateChatModal = () => {
             toast( {
                 title: "Only admins can add users!",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: "top",
             } );
             return;
@@ -148,8 +133,6 @@ const UpdateChatModal = () => {
                 title: "Successfully added user to chat",
                 // description: response.data.message,
                 status: "success",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } catch ( error ) {
@@ -157,8 +140,6 @@ const UpdateChatModal = () => {
                 title: "Failed to add user to chat",
                 description: error.response.data.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } finally {
@@ -210,8 +191,6 @@ const UpdateChatModal = () => {
                 title: "Successfully removed user from chat",
                 description: response.data.message,
                 status: "success",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } catch ( error ) {
@@ -219,8 +198,6 @@ const UpdateChatModal = () => {
                 title: "Failed to remove user from chat",
                 description: error.response.data.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } finally {
@@ -234,8 +211,6 @@ const UpdateChatModal = () => {
             toast( {
                 title: "You must provide a name",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: "top",
             } );
             return;
@@ -268,21 +243,19 @@ const UpdateChatModal = () => {
             setFetchChats( true );
             setRenameLoading( false );
 
+            /**
             toast( {
                 title: "Successfully renamed chat.",
                 // description: response.data.message,
                 status: "success",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
+            */
         } catch ( error ) {
             toast( {
                 title: "Failed to rename chat!",
                 description: error.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } finally {

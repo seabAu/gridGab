@@ -25,6 +25,9 @@ const styles = {
             gap: '0px',
             // borderRadius: "sm"
         },
+        box: {
+            bg: mode( 'gray.light', 'gray.dark' )( props ),
+        },
         p: {
             fontFamily: 'mono',
             // letterSpacing: 'tighter',

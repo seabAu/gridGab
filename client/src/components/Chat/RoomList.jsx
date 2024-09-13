@@ -36,10 +36,10 @@ const RoomList = ( props ) => {
         chats,
         setChats,
         fetchChats,
-        setFetchChats
+        setFetchChats,
+        toast,
     } = ChatState();
 
-    const toast = useToast();
     const { colorMode, toggleColorMode } = useColorMode();
     const [ loggedUser, setLoggedUser ] = useState();
 
@@ -51,9 +51,7 @@ const RoomList = ( props ) => {
         if ( chatData.users.find( ( uid ) => uid === user._id ) ) {
             toast( {
                 title: "User already in that public chat!",
-                status: "warning",
-                duration: 5000,
-                isClosable: true,
+                status: "error",
                 position: "top",
             } );
             return;
@@ -63,9 +61,7 @@ const RoomList = ( props ) => {
         if ( !chatData.isPublicChat ) {
             toast( {
                 title: "That chat isn't public!",
-                status: "warning",
-                duration: 5000,
-                isClosable: true,
+                status: "error",
                 position: "top",
             } );
             return;
@@ -75,9 +71,7 @@ const RoomList = ( props ) => {
             // No token in user data for some reason. Return.
             toast( {
                 title: "No token saved in session. Please refresh the page and try again.",
-                status: "warning",
-                duration: 5000,
-                isClosable: true,
+                status: "error",
                 position: "top",
             } );
             return;
@@ -108,21 +102,19 @@ const RoomList = ( props ) => {
             // Remove current iteration of this chat from chats list, and add the new one. 
             setFetchChats( true );
 
+            /*
             toast( {
                 title: "Successfully joined public chat",
                 description: response.data.message,
                 status: "success",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
+            */
         } catch ( error ) {
             toast( {
                 title: "Failed to join public chat",
                 description: error.response.data.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } finally {
@@ -144,6 +136,11 @@ const RoomList = ( props ) => {
                             size={ 'xs' }
                         >
                             <Select
+                                style={ {
+                                    padding: `0px`,
+                                    fontSize: `0.875em`,
+                                    borderBottom: '0px'
+                                } }
                                 placeholder='Public Rooms'
                                 size={ size }
                                 // icon={ <MdArrowDropDown /> }

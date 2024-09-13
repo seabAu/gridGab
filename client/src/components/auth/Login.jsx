@@ -14,9 +14,9 @@ import { useState } from 'preact/hooks';
 import React from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ChatState } from '../../context/ChatProvider';
 
 const Login = () => {
-    const toast = useToast();
     const navigate = useNavigate();
     const { colorMode, toggleColorMode } = useColorMode();
     const [ showPassword, setShowPassword ] = useState( false );
@@ -27,6 +27,10 @@ const Login = () => {
     const [ confirmPassword, setConfirmPassword ] = useState();
     const [ loading, setLoading ] = useState( false );
 
+    const {
+        toast,
+    } = ChatState();
+
     const submitHandler = async () => {
         // Submit details to server. 
         setLoading( true );
@@ -34,9 +38,6 @@ const Login = () => {
             toast( {
                 title: "Please fill in all fields",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setLoading( false );
             return;
@@ -61,13 +62,7 @@ const Login = () => {
             toast( {
                 title: response.data.message ? response.data.message : "Login Successful",
                 status: "success",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
-
-            // Update state
-            // setUser( data );
 
             // Update localstorage.
             localStorage.setItem( "userInfo", JSON.stringify( user ) );
@@ -81,9 +76,6 @@ const Login = () => {
                 title: "An error occurred",
                 description: error.response.data.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setLoading( false );
         }
@@ -93,7 +85,12 @@ const Login = () => {
         <VStack
             spacing='5px'
             color='black'
-            bg={ useColorModeValue( 'gray.200', 'gray.800' ) }
+            // bg={
+            //     useColorModeValue(
+            //         'gray.200',
+            //         'gray.800'
+            //     )
+            // }
         >
             <FormControl
                 id={ 'name' }
@@ -105,7 +102,12 @@ const Login = () => {
                     onChange={ ( e ) => {
                         setName( e.target.value );
                     } }
-                    bg={ useColorModeValue( 'gray.200', 'gray.dark' ) }
+                    // bg={
+                    //     useColorModeValue(
+                    //         'gray.200',
+                    //         'gray.800'
+                    //     )
+                    // }
                 />
             </FormControl>
 

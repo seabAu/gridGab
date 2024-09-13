@@ -47,7 +47,7 @@ const ProfileInfo = ( props ) => {
         <Box
             // Overall content container
             bg={ useColorModeValue(
-                'gray.light',
+                'gray.100',
                 'gray.dark'
             ) }
             display={ "flex" }
@@ -80,7 +80,7 @@ const ProfileInfo = ( props ) => {
                     <Avatar
                         borderRadius="full"
                         boxSize="96px"
-                        ratio={2}
+                        ratio={ 2 }
                         src={ userData ? userData.avatar : '' }
                         alt={ userData ? userData.name : '' }
                     />
@@ -164,7 +164,7 @@ const ProfileInfo = ( props ) => {
                         )
                     }
 
-{
+                    {
                         userData && userData?.name && (
                             <Box
                                 mr={ 2 }
@@ -180,7 +180,7 @@ const ProfileInfo = ( props ) => {
                                 >{ `You ${ user.friends.includes( userData._id ) ? 'are' : 'are not' } friends` }</Text>
                             </Box>
                         )
-                    } 
+                    }
 
                 </Box>
 
@@ -188,7 +188,7 @@ const ProfileInfo = ( props ) => {
             </Box>
 
             <Box
-                gap={'2rem'}
+                gap={ '2rem' }
             // Bottom panels
             >
 

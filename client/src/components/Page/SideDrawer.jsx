@@ -67,16 +67,18 @@ const SideDrawer = ( props ) => {
     const {
         user,
         setUser,
+        chats,
+        setChats,
         selectedChat,
         setSelectedChat,
         openSearchDrawer,
         setOpenSearchDrawer,
+        toast, 
     } = ChatState();
 
     const { colorMode, toggleColorMode } = useColorMode();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const initialFocus = useRef();
-    const toast = useToast();
     const [ search, setSearch ] = useState( "" );
     const [ searchResult, setSearchResult ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
@@ -87,8 +89,6 @@ const SideDrawer = ( props ) => {
             toast( {
                 title: "Please enter something in search",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: 'top-left'
             } );
             return;
@@ -105,24 +105,12 @@ const SideDrawer = ( props ) => {
 
             const response = await axios.get( `/api/user?search=${ search }`, config );
 
-            console.log(
-                "SideDrawer",
-                " :: ", "handleSearch",
-                " :: ", "token = ", user.token,
-                " :: ", "search = ", search,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
-            // const data = response.data;
-
             if ( response.data ) {
                 setSearchResult( response.data.data );
 
                 toast( {
                     title: "Found results!",
                     status: "success",
-                    duration: 5000,
-                    isClosable: true,
                     position: 'top-left'
                 } );
             }
@@ -138,8 +126,6 @@ const SideDrawer = ( props ) => {
                 title: "Error: Failed to load the search results: ",
                 description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: 'bottom-left'
             } );
         } finally {
@@ -152,8 +138,6 @@ const SideDrawer = ( props ) => {
             toast( {
                 title: "Please select a user.",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: 'top-left'
             } );
             return;
@@ -170,28 +154,17 @@ const SideDrawer = ( props ) => {
             };
 
             const response = await axios.post(
-                `/api/chat`,
-                {
+                `/api/chat`, {
                     userId
                 },
                 config
             );
 
-            console.log(
-                "SideDrawer",
-                " :: ", "accessChat",
-                " :: ", "token = ", user.token,
-                " :: ", "search = ", search,
-                " :: ", "response = ", response,
-                " :: ", "response.data.data = ", response.data.data
-            );
-            // const data = response.data;
-
             if ( response.data ) {
                 let data = response.data.data;
-                if ( chats.length > 0 ) {
+                if ( chats?.length > 0 ) {
                     // We are involved in at least 1 chat.
-                    if ( !chats.find( ( c ) => c._id === data._id ) ) {
+                    if ( !chats?.find( ( c ) => c._id === data._id ) ) {
                         // Append this chat to our list of chats.
                         setChats( [ data, ...chats ] );
                     }
@@ -200,13 +173,16 @@ const SideDrawer = ( props ) => {
             }
             setLoadingChat( false );
         } catch ( error ) {
-
+            let msg = error.message;
+            if ( error.response?.data?.message ) {
+                // If alternate error message given
+                msg = error.response.data.message;
+            }
+            console.log( error );
             toast( {
                 title: "Error",
-                description: "Failed to load chat",
+                description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: 'bottom-left'
             } );
         } finally {

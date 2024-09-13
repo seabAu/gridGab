@@ -22,12 +22,6 @@ export function App () {
                     path="/"
                     element={ <HomePage /> } exact />
 
-                {/*
-                    <Route
-                        path="*"
-                        element={ <Home /> } />
-                */}
-
                 <Route
                     path="chat"
                     element={ <ChatPage /> } exact />

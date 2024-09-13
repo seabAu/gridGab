@@ -41,7 +41,6 @@ const CreateChatModal = ( { children } ) => {
     const [ search, setSearch ] = useState( "" );
     const [ searchResult, setSearchResult ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
-    const toast = useToast();
 
     const {
         user,
@@ -50,7 +49,8 @@ const CreateChatModal = ( { children } ) => {
         fetchChats,
         setFetchChats,
         selectedChat,
-        setSelectedChat
+        setSelectedChat,
+        toast
     } = ChatState();
 
     const handleGroup = ( newUser ) => {
@@ -59,8 +59,6 @@ const CreateChatModal = ( { children } ) => {
             toast( {
                 title: "User already added",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: "top",
             } );
             return;
@@ -104,8 +102,6 @@ const CreateChatModal = ( { children } ) => {
                 title: "Error Occured!",
                 description: "Failed to Load the Search Results",
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom-left",
             } );
         }
@@ -120,8 +116,6 @@ const CreateChatModal = ( { children } ) => {
             toast( {
                 title: "Please fill all the fields",
                 status: "warning",
-                duration: 5000,
-                isClosable: true,
                 position: "top",
             } );
             return;
@@ -169,8 +163,6 @@ const CreateChatModal = ( { children } ) => {
                 title: "New Group Chat Created!",
                 // description: response.data.message,
                 status: "success",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         } catch ( error ) {
@@ -187,16 +179,10 @@ const CreateChatModal = ( { children } ) => {
                 // description: error.response.data,
                 description: error.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
                 position: "bottom",
             } );
         }
     };
-
-    const handleChange = async ( value, value_id ) => {
-
-    }
 
     return (
         <>

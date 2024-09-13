@@ -31,6 +31,8 @@ import axios from 'axios';
 const ProfileModal = ( props ) => {
     const {
         userData,
+        showHeader = false,
+        showfooter = true,
         children,
         forceClose
     } = props;
@@ -40,8 +42,8 @@ const ProfileModal = ( props ) => {
         setUser,
         fetchUser,
         setFetchUser,
+        toast,
     } = ChatState();
-    const toast = useToast();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { colorMode, toggleColorMode } = useColorMode();
@@ -86,30 +88,13 @@ const ProfileModal = ( props ) => {
             toast( {
                 title: response.data.message ? response.data.message : "Update Successful",
                 status: "success",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
-            // localStorage.setItem( "userInfo", JSON.stringify( updatedUserData ) );
-            
-            setFriendLoading( false );
 
-            // // Spoof the change locally. 
-            // let userUpdate = { ...user };
-            // if ( isFriend ) {
-            //     // Was already friends, so remove locally. 
-            //     userUpdate.friends = [ ...userUpdate.friends ].filter( u => u._id != friendID );
-            // }
-            // else {
-            //     // Was not yet friends, so add locally. 
-            //     userUpdate.friends = [ ...userUpdate.friends, friendID ];
-            // }
-            // setUser( userUpdate );
-            // 
-            // console.log( "ProfileModal :: handleFriend :: userUpdate = ", userUpdate );
+            setFriendLoading( false );
 
             // Tell the state handler to fetch this user's profile after the change was made. 
             setFetchUser( true );
+            // localStorage.setItem( "userInfo", JSON.stringify( updatedUserData ) );
 
         } catch ( error ) {
             let msg = error.message;
@@ -122,9 +107,6 @@ const ProfileModal = ( props ) => {
                 title: "An error occurred",
                 description: msg,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setFriendLoading( false );
 
@@ -160,9 +142,6 @@ const ProfileModal = ( props ) => {
             toast( {
                 title: response.data.message ? response.data.message : "Update Successful",
                 status: "success",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             localStorage.setItem( "userInfo", JSON.stringify( updatedUserData ) );
             setUser( updatedUserData );
@@ -174,9 +153,6 @@ const ProfileModal = ( props ) => {
                 title: "An error occurred!",
                 description: error.message,
                 status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
             } );
             setLoading( false );
         } finally {
@@ -202,6 +178,10 @@ const ProfileModal = ( props ) => {
                 scrollBehavior={ 'inside' }
                 initialFocusRef={ initialRef }
                 finalFocusRef={ finalRef }
+                bg={ useColorModeValue(
+                    'gray.100',
+                    'gray.dark'
+                ) }
             >
                 <ModalOverlay
                     // bg='blackAlpha.300'
@@ -213,33 +193,350 @@ const ProfileModal = ( props ) => {
                 />
                 <ModalContent
                     h="410px"
+                    w={ 'auto' }
+                    maxW={ `${ 480 }px` }
+                    py={ 1 }
+                    // bg={ useColorModeValue(
+                    //     'gray.100',
+                    //     'gray.800'
+                    // ) }
                     bg={ useColorModeValue(
-                        'gray.light',
-                        'gray.dark'
-                    ) }>
-                    <ModalHeader
-                        fontFamily="Work sans"
-                        display="flex"
-                        justifyContent="left"
-                        bg='blackAlpha.300'
-                        px={ 2 }
-                        py={ 1 }
-                        m={ 0 }
-                    >
-                        { userData ? userData.name : '' }'s Profile
-                        <ModalCloseButton size={ 'sm' } />
-                    </ModalHeader>
+                        'whiteAlpha.400',
+                        'gray.900'
+                    ) }
+                >
+
+                    { showHeader &&
+                        <ModalHeader
+                            fontFamily="Work sans"
+                            display="flex"
+                            justifyContent="left"
+                            bg={ useColorModeValue(
+                                'whiteAlpha.200',
+                                'blackAlpha.200'
+                            ) }
+                            px={ 2 }
+                            py={ 1 }
+                            m={ 0 }
+                        >
+                            { userData ? userData.name : '' }'s Profile
+                            <ModalCloseButton size={ 'sm' } />
+                        </ModalHeader>
+                    }
+
                     <ModalBody
-                        bg={ useColorModeValue(
-                            'gray.light',
-                            'gray.dark'
-                        ) }
                         display={ "flex" }
                         flexDir={ "column" }
                         alignItems={ "center" }
                         w={ '100%' }
                         h={ '100%' }
+                        mt={ 2 }
                     >
+                        <ModalCloseButton size={ 'sm' } />
+
+
+
+                        <Box
+                            // Overall content container
+                            display={ "flex" }
+                            flexDir={ "column" }
+                            w={ '100%' }
+                            h={ '100%' }
+                        >
+                            <Box
+                                // Top Panels
+                                display={ 'flex' }
+                                flexDir={ 'row' }
+                                flexGrow={ 1 }
+                                // px={ `${ 0.5 }em` }
+                                w={ '100%' }
+                                h={ '100%' }
+                            >
+
+                                <Box
+                                    // Left Side Top Panel
+                                    display={ 'flex' }
+                                    flexDir={ 'column' }
+                                    // border={ '1px' }
+                                    alignItems={ 'start' }
+                                    alignContent={ 'flex-start' }
+                                    alignSelf={ 'start' }
+                                    justifyContent={ 'flex-start' }
+                                    px={ `${ 0.5 }em` }
+                                    flexGrow={ 0 }
+                                >
+                                    <Box
+                                        // Left Side Panel
+                                        display={ 'flex' }
+                                        flexDir={ 'column' }
+                                        // border={ '1px' }
+                                        alignItems={ "center" }
+                                        justifyContent={ 'center' }
+                                        flexGrow={ 0 }
+                                        px={ `${ 0.5 }em` }
+                                        minW={ '25%' }
+                                        w={ '100%' }
+                                    >
+                                        <Avatar
+                                            borderRadius="full"
+                                            boxSize="108px"
+                                            src={ userData ? userData.avatar : '' }
+                                            alt={ userData ? userData.name : '' }
+                                        />
+
+                                        {
+                                            // If not the current user, show a add/remove-friend button. 
+                                            userData && user && ( ( user?._id !== userData?._id ) ) ? (
+                                                <Box>
+                                                    <Button
+                                                        size={ 'xs' }
+                                                        onClick={ ( e ) => {
+                                                            handleFriend( userData._id );
+                                                        } }
+                                                        width="100%"
+                                                        style={ { marginTop: 15 } }
+                                                        isLoading={ friendLoading }
+                                                    >
+                                                        {
+                                                            `${ ( user?.friends?.includes( userData._id ) ) ? 'Remove' : 'Add' } Friend`
+                                                        }
+                                                    </Button>
+                                                </Box>
+                                            ) : (
+                                                <></>
+                                            )
+                                        }
+
+                                    </Box>
+
+                                </Box>
+
+                                <Box
+                                    // Right Side Top Panel
+                                    display={ 'flex' }
+                                    flexDir={ 'column' }
+                                    alignItems={ 'start' }
+                                    justifyContent={ 'flex-start' }
+                                    flexGrow={ 0 }
+                                    px={ `${ 0.5 }em` }
+                                    maxW={ '755%' }
+                                    w={ '100%' }
+                                    h={ '100%' }
+                                >
+                                    {
+                                        userData && userData?.display_name && (
+                                            <Box
+                                                mr={ 2 }
+                                                display={ 'flex' }
+                                            >
+                                                <Text
+                                                    as={ 'b' }
+                                                    size={ 'lg' }
+                                                    fontSize={ 'md' }
+                                                >{ userData.display_name }</Text>
+                                            </Box>
+                                        )
+                                    }
+
+                                    {
+                                        userData && userData?.name && (
+                                            <Box
+                                                mr={ 2 }
+                                                display={ 'flex' }
+                                            >
+                                                <Text
+                                                    as={ 'b' }
+                                                    size={ 'lg' }
+                                                    fontSize={ 'md' }
+                                                    style={ {
+                                                        fontFamily: 'calibri',
+                                                        fontSize: `0.75em`,
+                                                        padding: `0px`,
+                                                        color: `grey`,
+                                                    } }
+                                                >{ userData.name }</Text>
+                                            </Box>
+                                        )
+                                    }
+
+                                    {
+                                        userData && userData?.register_date && (
+                                            <Box
+                                                display={ 'block' }
+                                                wordBreak={ 'keep-all' }
+                                                overflowWrap={ 'normal' }
+                                            >
+                                                <Text
+                                                    style={ {
+                                                        fontFamily: 'calibri',
+                                                        fontSize: `0.75em`,
+                                                        padding: `0px`,
+                                                        color: `darkslategrey`,
+                                                    } }
+                                                >Joined { util.time.convertDate( new Date( userData.register_date ) ) }</Text>
+                                            </Box>
+                                        )
+                                    }
+
+                                    {
+                                        userData && userData?.name && (
+                                            <Box
+                                                mr={ 2 }
+                                                display={ 'flex' }
+                                            >
+                                                <Text
+                                                    style={ {
+                                                        fontFamily: 'calibri',
+                                                        fontSize: `0.75em`,
+                                                        padding: `0px`,
+                                                        color: `grey`,
+                                                    } }
+                                                >{ `You ${ user.friends.includes( userData._id ) ? 'are' : 'are not' } friends` }</Text>
+                                            </Box>
+                                        )
+                                    }
+
+                                    {
+                                        userData && userData?.name && (
+                                            <Box
+                                                mr={ 2 }
+                                                display={ 'flex' }
+                                            >
+                                                <Text
+                                                    style={ {
+                                                        fontFamily: 'calibri',
+                                                        fontSize: `0.75em`,
+                                                        padding: `0px`,
+                                                        color: `grey`,
+                                                    } }
+                                                >{ `You ${ user.friends.includes( userData._id ) ? 'are' : 'are not' } in any chats together` }</Text>
+                                            </Box>
+                                        )
+                                    }
+
+                                </Box>
+
+                            </Box>
+
+                            <Box
+                                // Bottom panels
+                                display={ 'flex' }
+                                flexDir={ 'column' }
+                                px={ `${ 0.5 }em` }
+                                w={ '100%' }
+                                h={ '100%' }
+                            >
+
+                                {
+                                    userData && userData?.about && (
+                                        <Box
+                                            display={ 'flex' }
+                                            style={ {
+                                                fontFamily: 'calibri',
+                                                marginTop: `16px`,
+                                                padding: 4,
+                                                borderWidth: `1px`,
+                                                borderRadius: `12px`,
+                                                position: 'relative',
+                                            } }
+                                        >
+                                            <Text
+                                                style={ {
+                                                    fontFamily: 'calibri',
+                                                    padding: `0px`,
+                                                    color: `darkslategrey`,
+                                                    fontSize: `0.875em`,
+                                                    position: 'relative',
+                                                    top: '-20px',
+                                                    left: '10px',
+                                                } }
+                                            >
+                                                About
+                                            </Text>
+                                            <Text
+                                                style={ {
+                                                    fontFamily: 'calibri',
+                                                    marginLeft: `-8px`,
+                                                    padding: `0px`,
+                                                    fontSize: `0.875em`,
+                                                } }
+                                                noOfLines={ [ 1, 2, 3 ] }
+                                            >
+                                                { userData.about }
+                                            </Text>
+                                        </Box>
+                                    )
+                                }
+
+                                {
+                                    userData && userData?.status && (
+                                        <Box
+                                            display={ 'flex' }
+                                            style={ {
+                                                fontFamily: 'calibri',
+                                                marginTop: `16px`,
+                                                padding: 4,
+                                                borderWidth: `1px`,
+                                                borderRadius: `12px`,
+                                                position: 'relative',
+                                            } }
+                                        >
+                                            <Text
+                                                style={ {
+                                                    fontFamily: 'calibri',
+                                                    padding: `0px`,
+                                                    color: `darkslategrey`,
+                                                    fontSize: `0.875em`,
+                                                    position: 'relative',
+                                                    top: '-20px',
+                                                    left: '10px',
+                                                } }
+                                            >
+                                                Status
+                                            </Text>
+                                            <Text
+                                                style={ {
+                                                    fontFamily: 'calibri',
+                                                    marginLeft: `-8px`,
+                                                    padding: `0px`,
+                                                    fontSize: `0.875em`,
+                                                } }
+                                                noOfLines={ [ 1, 2, 3 ] }
+                                            >
+                                                { userData.status }
+                                            </Text>
+                                        </Box>
+                                    )
+                                }
+
+                            </Box>
+                        </Box>
+                    </ModalBody>
+
+                    {
+                        showfooter &&
+                        <ModalFooter
+                            p={ 1 }
+                            bg={ useColorModeValue(
+                                'gray.100',
+                                'gray.900'
+                            ) }
+                        >
+                                <Button onClick={ () => { onClose(); } } size={ 'sm' }>Close</Button>
+                        </ModalFooter>
+                    }
+                </ModalContent>
+            </Modal>
+        </>
+    );
+}
+
+export default ProfileModal;
+
+
+/*
+
+
                         <Box
                             // Overall content container
                             display={ 'flex' }
@@ -273,7 +570,7 @@ const ProfileModal = ( props ) => {
                                         src={ userData ? userData.avatar : '' }
                                         alt={ userData ? userData.name : '' }
                                     />
-                                    
+
                                     {
                                         // If not the current user, show a add/remove-friend button. 
                                         userData && user && ( ( user?._id !== userData?._id ) ) ? (
@@ -369,20 +666,6 @@ const ProfileModal = ( props ) => {
                                 </Box>
                             </Box>
                         </Box>
-                    </ModalBody>
-                    <ModalFooter
-                        p={ 1 }
-                        bg={ useColorModeValue(
-                            'gray.light',
-                            'gray.dark'
-                        ) }
-                    >
-                        <Button onClick={ onClose } size={ 'sm' }>Close</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </>
-    );
-}
 
-export default ProfileModal;
+
+*/
